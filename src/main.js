@@ -55,7 +55,7 @@ const DOM = {
 };
 
 // --- HANDLERS (Olay Yöneticileri) ---
-
+// Bu fonksiyonlar artık veriyi önbellekten (cache) alarak gereksiz API isteklerini önler.
 async function updateStandings() {
     const seasonId = DOM.standings.select.value;
     if (!AppState.seasons[seasonId]) {
@@ -90,7 +90,6 @@ async function updateKings() {
 }
 
 async function updateEurocup() {
-    const cupId = DOM.eurocup.select.value === '24' ? '1' : '2'; // HTML'deki value'ye göre ayarla
     const cupYear = DOM.eurocup.select.value;
     if (!AppState.eurocups[cupYear]) {
         AppState.eurocups[cupYear] = await getEurocupData(cupYear);
@@ -99,16 +98,15 @@ async function updateEurocup() {
     displayEurocupFixtures(DOM.eurocup.container, teams, fixtures);
 }
 
+
 // --- NAVİGASYON ---
 function showSection(id) {
     DOM.navigation.sections.forEach(section => {
         section.classList.toggle('active', section.id === id);
     });
-
     const selector = `.nav-link[href="#${id}"]`;
     DOM.navigation.navLinks.forEach(link => link.classList.remove('active'));
     document.querySelector(selector)?.classList.add('active');
-
     if (!DOM.navigation.mobileMenu.classList.contains('hidden')) {
         DOM.navigation.mobileMenu.classList.add('hidden');
     }
@@ -123,12 +121,36 @@ function handleLinkClick(e) {
 
 // --- UYGULAMAYI BAŞLATMA FONKSİYONU ---
 async function initializeApp() {
+    // GÜNCELLENDİ: İlk yüklemede veriler sadece bir kez çekilir ve önbelleğe alınır.
+    const initialSeasonId = '3';
+    const initialEurocupId = '25';
+
+    // Verileri paralel olarak çek
+    const [seasonData, eurocupData] = await Promise.all([
+        getSeasonData(initialSeasonId),
+        getEurocupData(initialEurocupId)
+    ]);
+    
+    // Verileri önbelleğe al
+    AppState.seasons[initialSeasonId] = seasonData;
+    AppState.eurocups[initialEurocupId] = eurocupData;
+
+    // Arayüzü önceden çekilmiş verilerle doldur
+    displayTeams(DOM.teams.container, seasonData.teams);
+    displayBudgets(DOM.budgets.container, seasonData.teams);
+    displaySuspendedPlayers(DOM.suspensions.container, seasonData.teams, seasonData.playerStats);
+    displayStandings(DOM.standings.container, seasonData.teams, seasonData.fixtures);
+    displayFixtures(DOM.fixtures.container, seasonData.teams, seasonData.fixtures);
+    displayTopStats(DOM.kings.scorersContainer, DOM.kings.assistsContainer, DOM.kings.cleanSheetsContainer, seasonData.teams, seasonData.playerStats);
+    displayEurocupFixtures(DOM.eurocup.container, eurocupData.teams, eurocupData.fixtures);
+
     // Event Listeners
     DOM.standings.select.addEventListener('change', updateStandings);
     DOM.fixtures.select.addEventListener('change', updateFixtures);
     DOM.kings.select.addEventListener('change', updateKings);
     DOM.eurocup.select.addEventListener('change', updateEurocup);
 
+    // Navigasyon Event Listeners
     DOM.navigation.navLinks.forEach(link => link.addEventListener('click', handleLinkClick));
     DOM.navigation.mobileNavLinks.forEach(link => link.addEventListener('click', handleLinkClick));
     DOM.navigation.mobileMenuButton.addEventListener('click', () => {
@@ -138,30 +160,13 @@ async function initializeApp() {
         const hash = window.location.hash.substring(1) || 'anasayfa';
         showSection(hash);
     });
-
-    // İlk Yükleme İşlemleri
-    // Sabit olan (güncel sezonu gösteren) bölümlerin verisini çek ve göster
-    const season3Data = await getSeasonData('3');
-    displayTeams(DOM.teams.container, season3Data.teams);
-    displayBudgets(DOM.budgets.container, season3Data.teams);
-    displaySuspendedPlayers(DOM.suspensions.container, season3Data.teams, season3Data.playerStats);
-
-    // Seçime bağlı bölümleri varsayılan değerleriyle yükle
-    await Promise.all([
-        updateStandings(),
-        updateFixtures(),
-        updateKings(),
-        updateEurocup()
-    ]);
-
-    // Navigasyonu ayarla
+    
+    // Sayfa ilk açıldığında doğru bölümü göster
     const initialHash = window.location.hash.substring(1) || 'anasayfa';
     showSection(initialHash);
-
-    // Footer yıl
-    document.getElementById('current-year').textContent = new Date().getFullYear();
     
-    console.log("Uygulama en iyi haliyle başarıyla başlatıldı!");
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+    console.log("Uygulama optimize edilmiş ve en iyi haliyle başlatıldı!");
 }
 
 // Uygulamayı başlat
