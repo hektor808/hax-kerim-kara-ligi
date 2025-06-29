@@ -5,7 +5,8 @@
  */
 export async function getSeasonData(seasonId) {
     try {
-        const response = await fetch(`/data/season${seasonId}.json`);
+        // BAŞINDAKİ / KALDIRILDI, YERİNE ./ EKLENDİ
+        const response = await fetch(`./data/season${seasonId}.json`);
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: season${seasonId}.json`);
         }
@@ -23,11 +24,10 @@ export async function getSeasonData(seasonId) {
  */
 export async function getEurocupData(cupId) {
     try {
-        // HTML'deki value '1' ve '2' olduğu için, bunları '24' ve '25'e çeviriyoruz.
-        const year = cupId === '1' ? '24' : '25';
-        const response = await fetch(`/data/eurocup${year}.json`);
+        // BAŞINDAKİ / KALDIRILDI, YERİNE ./ EKLENDİ
+        const response = await fetch(`./data/eurocup${cupId}.json`);
         if (!response.ok) {
-            throw new Error(`Veri dosyası bulunamadı: eurocup${year}.json`);
+            throw new Error(`Veri dosyası bulunamadı: eurocup${cupId}.json`);
         }
         return await response.json();
     } catch (error) {
