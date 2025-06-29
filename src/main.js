@@ -10,13 +10,15 @@ import {
     displaySuspendedPlayers
 } from './ui.js';
 
-// --- STATE & CACHE ---
+// --- UYGULAMA DURUMU VE ÖNBELLEK (STATE & CACHE) ---
+// Sunucudan çekilen verileri burada saklayarak gereksiz ağ isteklerini önlüyoruz.
 const AppState = {
     seasons: {},
     eurocups: {},
 };
 
 // --- DOM ELEMENTLERİ ---
+// HTML'deki elementlere kolayca erişmek için tek bir merkezi nesne.
 const DOM = {
     standings: {
         select: document.getElementById('seasonSelectStandings'),
@@ -38,6 +40,7 @@ const DOM = {
     },
     teams: {
         container: document.getElementById('teams-container'),
+        searchInput: document.getElementById('team-search-input'),
     },
     budgets: {
         container: document.getElementById('budget-container'),
@@ -54,8 +57,9 @@ const DOM = {
     }
 };
 
-// --- HANDLERS (Olay Yöneticileri) ---
-// Bu fonksiyonlar artık veriyi önbellekten (cache) alarak gereksiz API isteklerini önler.
+// --- HANDLERS (OLAY YÖNETİCİLERİ) ---
+
+// Dropdown menülerden bir sezon seçildiğinde ilgili bölümü günceller.
 async function updateStandings() {
     const seasonId = DOM.standings.select.value;
     if (!AppState.seasons[seasonId]) {
@@ -98,6 +102,18 @@ async function updateEurocup() {
     displayEurocupFixtures(DOM.eurocup.container, teams, fixtures);
 }
 
+// Takım arama kutusuna yazı yazıldığında takımları filtreler.
+function handleTeamSearch() {
+    const searchTerm = DOM.teams.searchInput.value.toLowerCase();
+    // Arama sadece güncel sezon (Sezon 3) takımları için çalışır.
+    const allTeams = AppState.seasons['3']?.teams || [];
+
+    const filteredTeams = allTeams.filter(team => 
+        team.name.toLowerCase().includes(searchTerm)
+    );
+
+    displayTeams(DOM.teams.container, filteredTeams);
+}
 
 // --- NAVİGASYON ---
 function showSection(id) {
@@ -121,21 +137,22 @@ function handleLinkClick(e) {
 
 // --- UYGULAMAYI BAŞLATMA FONKSİYONU ---
 async function initializeApp() {
-    // GÜNCELLENDİ: İlk yüklemede veriler sadece bir kez çekilir ve önbelleğe alınır.
+    // Varsayılan olarak gösterilecek sezon ve turnuva ID'leri
     const initialSeasonId = '3';
     const initialEurocupId = '25';
 
-    // Verileri paralel olarak çek
+    // Sayfa ilk yüklendiğinde gerekli tüm verileri paralel olarak çek.
+    // Bu, birden çok gereksiz ağ isteğini önler.
     const [seasonData, eurocupData] = await Promise.all([
         getSeasonData(initialSeasonId),
         getEurocupData(initialEurocupId)
     ]);
     
-    // Verileri önbelleğe al
+    // Çekilen verileri ileride kullanmak üzere önbelleğe al.
     AppState.seasons[initialSeasonId] = seasonData;
     AppState.eurocups[initialEurocupId] = eurocupData;
 
-    // Arayüzü önceden çekilmiş verilerle doldur
+    // Arayüzü önceden çekilmiş verilerle doldurarak hızlı bir ilk gösterim sağla.
     displayTeams(DOM.teams.container, seasonData.teams);
     displayBudgets(DOM.budgets.container, seasonData.teams);
     displaySuspendedPlayers(DOM.suspensions.container, seasonData.teams, seasonData.playerStats);
@@ -144,13 +161,14 @@ async function initializeApp() {
     displayTopStats(DOM.kings.scorersContainer, DOM.kings.assistsContainer, DOM.kings.cleanSheetsContainer, seasonData.teams, seasonData.playerStats);
     displayEurocupFixtures(DOM.eurocup.container, eurocupData.teams, eurocupData.fixtures);
 
-    // Event Listeners
+    // Olay Dinleyicilerini (Event Listeners) Kur
     DOM.standings.select.addEventListener('change', updateStandings);
     DOM.fixtures.select.addEventListener('change', updateFixtures);
     DOM.kings.select.addEventListener('change', updateKings);
     DOM.eurocup.select.addEventListener('change', updateEurocup);
+    DOM.teams.searchInput.addEventListener('input', handleTeamSearch);
 
-    // Navigasyon Event Listeners
+    // Navigasyon Olay Dinleyicileri
     DOM.navigation.navLinks.forEach(link => link.addEventListener('click', handleLinkClick));
     DOM.navigation.mobileNavLinks.forEach(link => link.addEventListener('click', handleLinkClick));
     DOM.navigation.mobileMenuButton.addEventListener('click', () => {
@@ -161,12 +179,14 @@ async function initializeApp() {
         showSection(hash);
     });
     
-    // Sayfa ilk açıldığında doğru bölümü göster
+    // Sayfa ilk açıldığında URL'ye göre doğru bölümü göster
     const initialHash = window.location.hash.substring(1) || 'anasayfa';
     showSection(initialHash);
     
+    // Footer'daki yılı güncelle
     document.getElementById('current-year').textContent = new Date().getFullYear();
-    console.log("Uygulama optimize edilmiş ve en iyi haliyle başlatıldı!");
+    
+    console.log("Uygulama tüm iyileştirmelerle başarıyla başlatıldı!");
 }
 
 // Uygulamayı başlat
