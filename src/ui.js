@@ -2,10 +2,6 @@ import { calculateStandings } from './utils.js';
 
 // --- Arayüz Yardımcıları ---
 
-function renderLoading(container) {
-    container.innerHTML = `<p class="text-center text-gray-400 p-4">Yükleniyor...</p>`;
-}
-
 function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
 }
@@ -22,9 +18,8 @@ export function displayStandings(container, teams, fixtures) {
         return renderError(container);
     }
     const standings = calculateStandings(teams, fixtures);
-    container.innerHTML = ''; // Önce temizle
+    container.innerHTML = ''; 
 
-    // EKLENDİ: Puan durumu verisi yoksa kullanıcıyı bilgilendir.
     if (standings.length === 0) {
         return renderEmpty(container, "Bu sezon için puan durumu verisi bulunamadı.");
     }
@@ -57,7 +52,7 @@ export function displayFixtures(container, teamsData, fixturesData) {
     }
     container.innerHTML = '';
     
-    // EKLENDİ: Fikstür verisi yoksa kullanıcıyı bilgilendir.
+    // GÜNCELLENDİ: Fikstür verisi yoksa kullanıcıyı bilgilendir.
     if (fixturesData.length === 0) {
         return renderEmpty(container, "Bu sezon için fikstür verisi bulunamadı.");
     }
@@ -121,7 +116,6 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
     }
     container.innerHTML = '';
 
-    // EKLENDİ: Eurocup fikstürü yoksa kullanıcıyı bilgilendir.
     if (fixturesData.length === 0) {
         return renderEmpty(container, "Bu turnuva için fikstür verisi bulunamadı.");
     }
@@ -162,17 +156,21 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
             } else {
                 scoreDisplay = `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Tarih yok'}</span>`;
             }
+            
+            // GÜNCELLENDİ: Takım bulunamazsa varsayılan logo kullanılır.
+            const homeLogo = homeTeam ? homeTeam.logo : '/img/default-logo.png';
+            const awayLogo = awayTeam ? awayTeam.logo : '/img/default-logo.png';
 
             fixtureElement.innerHTML = `
                 <div class="flex items-center gap-2 sm:gap-3 text-right justify-end w-2/5 min-w-0">
                     <span class="font-semibold text-white truncate">${homeTeam ? homeTeam.name : 'Belirlenmedi'}</span>
-                    <img src="${homeTeam ? homeTeam.logo : '/img/default-logo.png'}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
+                    <img src="${homeLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
                 </div>
                 <div class="w-[24%] text-center flex items-center justify-center">
                     ${scoreDisplay}
                 </div>
                 <div class="flex items-center gap-2 sm:gap-3 w-2/5 min-w-0">
-                    <img src="${awayTeam ? awayTeam.logo : '/img/default-logo.png'}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
+                    <img src="${awayLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
                     <span class="font-semibold text-white truncate">${awayTeam ? awayTeam.name : 'Belirlenmedi'}</span>
                 </div>
             `;
@@ -189,6 +187,7 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
         renderError(cleanSheetsContainer);
         return;
     }
+    
     // Gol Krallığı
     const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
     scorersContainer.innerHTML = `
@@ -201,7 +200,7 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
             return `
             <li class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="${logoSrc}" class="w-6 h-6 object-contain" />
+                    <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
                     <span class="text-white">${p.name}</span>
                 </div>
                 <span class="text-blue-400 font-bold">${p.goals}</span>
@@ -220,7 +219,7 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
             return `
             <li class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="${logoSrc}" class="w-6 h-6 object-contain" />
+                    <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
                     <span class="text-white">${p.name}</span>
                 </div>
                 <span class="text-green-400 font-bold">${p.assists}</span>
@@ -239,7 +238,7 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
             return `
             <li class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img src="${logoSrc}" class="w-6 h-6 object-contain" />
+                    <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
                     <span class="text-white">${p.name}</span>
                 </div>
                 <span class="text-cyan-400 font-bold">${p.cleanSheets}</span>
@@ -254,7 +253,6 @@ export function displayTeams(container, teamsData) {
     }
     container.innerHTML = '';
     
-    // EKLENDİ: Takım verisi yoksa kullanıcıyı bilgilendir.
     if(teamsData.length === 0) {
         return renderEmpty(container, "Takım verisi bulunamadı.");
     }
@@ -270,7 +268,7 @@ export function displayTeams(container, teamsData) {
                 <div class="mt-4 pt-4 border-t border-gray-700">
                     <h4 class="text-sm font-semibold text-gray-300 mb-2">Oyuncular</h4>
                     <div class="flex flex-wrap justify-center gap-2">
-                        ${team.players.map(player => `<span class="bg-gray-700 text-gray-200 text-xs font-medium px-2.5 py-1 rounded-full">${player}</span>`).join('')}
+                        ${(team.players || []).map(player => `<span class="bg-gray-700 text-gray-200 text-xs font-medium px-2.5 py-1 rounded-full">${player}</span>`).join('')}
                     </div>
                 </div>
             </div>
@@ -285,7 +283,6 @@ export function displayBudgets(container, teamsData) {
     }
     container.innerHTML = '';
 
-    // EKLENDİ: Bütçe verisi yoksa kullanıcıyı bilgilendir.
     if(teamsData.length === 0) {
         return renderEmpty(container, "Bütçe verisi bulunamadı.");
     }
@@ -317,7 +314,7 @@ export function displaySuspendedPlayers(container, teamsData, playerStats) {
     container.innerHTML = '';
 
     const suspendedPlayers = playerStats.filter(player => player.suspension);
-    // EKLENDİ: Cezalı oyuncu yoksa kullanıcıyı bilgilendir.
+
     if (suspendedPlayers.length === 0) {
         return renderEmpty(container, "Cezalı oyuncu yok.");
     }
