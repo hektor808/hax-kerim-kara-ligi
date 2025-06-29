@@ -1,0 +1,14 @@
+{
+  "teams": [
+    { "id": 1, "name": "San Marino", "captain": "Anastasios Bakasetas", "players": ["Player A", "Player B"], "logo": "https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1f8-1f1f2.svg"},
+    { "id": 2, "name": "Kazakistan", "captain": "Ryan Kent", "players": ["Player C", "Player D"], "logo": "https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1f0-1f1ff.svg"},
+    { "id": 3, "name": "İspanya", "captain": "Carlos", "players": ["Player E", "Player F"], "logo": "https://images.emojiterra.com/google/noto-emoji/unicode-15/color/512px/1f1ea-1f1f8.png" },
+    { "id": 4, "name": "Malta", "captain": "John", "players": ["Player G", "Player H"], "logo": "https://images.emojiterra.com/google/noto-emoji/unicode-16.0/color/svg/1f1f2-1f1f9.svg"}
+  ],
+  "fixtures": [
+    { "stageId": 1, "week": 1, "homeTeamId": 2, "awayTeamId": 3, "homeScore": 7, "awayScore": 5, "status": "Oynandı", "date": "27.06.2025 15:00" },
+    { "stageId": 1, "week": 1, "homeTeamId": 1, "awayTeamId": 4, "homeScore": 17, "awayScore": 1, "status": "Oynandı"},
+    { "stageId": 2, "week": 2, "homeTeamId": 1, "awayTeamId": 2, "homeScore": 1, "awayScore": 2, "status": "Oynandı", "date":"29.06.2025"},
+    { "stageId": 3, "week": 2, "homeTeamId": 4, "awayTeamId": 3, "homeScore": 13, "awayScore": 1, "status": "Oynandı", "date":"29.06.2025" }
+  ]
+}
