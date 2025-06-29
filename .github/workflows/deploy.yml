@@ -1,0 +1,53 @@
+# .github/workflows/deploy.yml
+
+# İş akışının adı
+name: Deploy to GitHub Pages
+
+# İş akışının ne zaman tetikleneceğini belirler
+on:
+  # main dalına her push yapıldığında çalışır
+  push:
+    branches: ["main"]
+  # Actions sekmesinden manuel olarak da çalıştırabilmeyi sağlar
+  workflow_dispatch:
+
+# İş akışının GITHUB_TOKEN ile yapacağı eylemler için izinleri ayarlar
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Aynı anda sadece bir deploy işlemi yapılmasına izin verir
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+# İş akışının yapacağı işleri tanımlar
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # dist klasörünü yükle
+          path: './dist'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
