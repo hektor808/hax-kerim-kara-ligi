@@ -1,8 +1,6 @@
 import { calculateStandings } from './utils.js';
 
 // --- Arayüz Yardımcıları ---
-// Tekrar eden mesaj gösterme mantığını tek bir yerde toplar.
-
 function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
 }
@@ -11,15 +9,7 @@ function renderEmpty(container, message) {
     container.innerHTML = `<p class="text-center text-gray-400 p-4">${message}</p>`;
 }
 
-
 // --- BİLEŞEN OLUŞTURUCU FONKSİYONLAR ---
-// Arayüzün küçük, yeniden kullanılabilir parçalarını oluşturan fonksiyonlar.
-
-/**
- * Tek bir takım kartı HTML elementi oluşturur.
- * @param {object} team - Takım verisi
- * @returns {HTMLElement} - Oluşturulan div elementi
- */
 function createTeamCard(team) {
     const card = document.createElement('div');
     card.className = 'bg-gray-800 rounded-xl shadow-lg p-6 text-center border border-gray-700 transition-all duration-300 hover:border-blue-500 hover:shadow-blue-500/20 transform hover:-translate-y-1';
@@ -39,15 +29,12 @@ function createTeamCard(team) {
     return card;
 }
 
-
 // --- ANA GÖSTERİM FONKSİYONLARI ---
-// Veriyi alıp, bileşenleri kullanarak ilgili HTML bölümünü güncelleyen ana fonksiyonlar.
 
 export function displayTeams(container, teamsData) {
     if (!teamsData) return renderError(container);
     container.innerHTML = '';
     if(teamsData.length === 0) return renderEmpty(container, "Arama kriterlerine uygun takım bulunamadı.");
-
     teamsData.forEach(team => {
         const teamCardElement = createTeamCard(team);
         container.append(teamCardElement);
@@ -71,7 +58,6 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
             const logoSrc = team ? team.logo : '/img/default-logo.png';
             const statValue = p[type];
             const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
-
             return `
             <li class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -84,19 +70,11 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
     };
 
     const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
-    scorersContainer.innerHTML = `
-        <h3 class="text-lg font-bold text-center text-yellow-400 mb-4 border-b border-yellow-500 pb-2">Gol Krallığı</h3>
-        <ul class="space-y-3">${renderStatList(topScorers, 'goals')}</ul>`;
-
+    scorersContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-yellow-400 mb-4 border-b border-yellow-500 pb-2">Gol Krallığı</h3><ul class="space-y-3">${renderStatList(topScorers, 'goals')}</ul>`;
     const topAssists = playerStats.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
-    assistsContainer.innerHTML = `
-        <h3 class="text-lg font-bold text-center text-green-400 mb-4 border-b border-green-500 pb-2">Asist Krallığı</h3>
-        <ul class="space-y-3">${renderStatList(topAssists, 'assists')}</ul>`;
-
+    assistsContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-green-400 mb-4 border-b border-green-500 pb-2">Asist Krallığı</h3><ul class="space-y-3">${renderStatList(topAssists, 'assists')}</ul>`;
     const topKeepers = playerStats.filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
-    cleanSheetsContainer.innerHTML = `
-        <h3 class="text-lg font-bold text-center text-cyan-400 mb-4 border-b border-cyan-500 pb-2">Clean Sheet</h3>
-        <ul class="space-y-3">${renderStatList(topKeepers, 'cleanSheets')}</ul>`;
+    cleanSheetsContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-cyan-400 mb-4 border-b border-cyan-500 pb-2">Clean Sheet</h3><ul class="space-y-3">${renderStatList(topKeepers, 'cleanSheets')}</ul>`;
 }
 
 export function displayStandings(container, teams, fixtures) {
@@ -227,18 +205,22 @@ export function displaySuspendedPlayers(container, teamsData, playerStats) {
     });
 }
 
-export function displayHeadToHeadResults(container, matches, teams) {
+export function displayHeadToHeadResults(container, matches, allSeasonsData) {
     container.innerHTML = '';
 
     if (matches.length === 0) {
         return renderEmpty(container, "Bu iki takım arasında oynanmış bir maç bulunamadı.");
     }
 
-    matches.sort((a, b) => a.week - b.week);
+    matches.sort((a, b) => {
+        if (a.seasonId !== b.seasonId) return a.seasonId - b.seasonId;
+        return a.week - b.week;
+    });
 
     matches.forEach(match => {
-        const homeTeam = teams.find(t => t.id === match.homeTeamId);
-        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+        const seasonTeams = allSeasonsData[match.seasonId].teams;
+        const homeTeam = seasonTeams.find(t => t.id === match.homeTeamId);
+        const awayTeam = seasonTeams.find(t => t.id === match.awayTeamId);
 
         if (!homeTeam || !awayTeam) return;
 
