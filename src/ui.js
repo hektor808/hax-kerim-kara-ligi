@@ -15,14 +15,32 @@ function createTeamCard(team) {
     return card;
 }
 
-function createStatListItem(player, team, type) {
+/**
+ * DEĞİŞTİRİLDİ: Oyuncu listesi elemanını oluştururken tıklama olayında kullanılmak üzere
+ * sezon ID'sini de bir data attribute olarak DOM'a gömer.
+ * @param {object} player Oyuncu objesi
+ * @param {object} team Takım objesi
+ * @param {string} type İstatistik türü ('goals', 'assists', 'cleanSheets')
+ * @param {string} seasonId Sezon ID'si
+ * @returns {HTMLLIElement}
+ */
+function createStatListItem(player, team, type, seasonId) {
     const listItem = document.createElement('li');
     listItem.className = 'flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer';
+    // Tıklama olayında doğru bağlamı yakalamak için gerekli bilgileri DOM'a ekliyoruz.
     listItem.dataset.playerName = player.name;
+    listItem.dataset.seasonId = seasonId; // <-- EN KRİTİK DEĞİŞİKLİK
+
     const logoSrc = team ? team.logo : '/img/default-logo.png';
     const statValue = player[type] || 0;
     const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
-    listItem.innerHTML = `<div class="flex items-center gap-3 pointer-events-none"><img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" /><span class="font-semibold text-white">${player.name}</span></div><span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>`;
+    
+    listItem.innerHTML = `
+        <div class="flex items-center gap-3 pointer-events-none">
+            <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
+            <span class="font-semibold text-white">${player.name}</span>
+        </div>
+        <span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>`;
     return listItem;
 }
 
@@ -36,33 +54,38 @@ export function displayTeams(container, teamsData) {
     });
 }
 
-export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsContainer, teams, playerStats) {
-     if (!teams || !playerStats) { renderError(scorersContainer); renderError(assistsContainer); renderError(cleanSheetsContainer); return; }
-    const renderStats = (container, title, titleColor, stats, type) => {
-        container.innerHTML = `<h3 class="text-lg font-bold text-center ${titleColor} mb-4 border-b border-gray-600 pb-2">${title}</h3>`;
-        const list = document.createElement('ul');
-        list.className = 'space-y-3';
-        if (stats.length === 0) {
-            const emptyItem = document.createElement('li');
-            emptyItem.className = 'text-center text-gray-400';
-            emptyItem.textContent = 'Veri yok.';
-            list.append(emptyItem);
-        } else {
-            stats.forEach(p => {
-                const team = teams.find(t => t.id === p.teamId && t.name === p.teamName);
-                const listItemElement = createStatListItem(p, team, type);
-                list.append(listItemElement);
-            });
-        }
-        container.append(list);
-    };
-    const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
-    renderStats(scorersContainer, 'Gol Krallığı', 'text-yellow-400', topScorers, 'goals');
-    const topAssists = playerStats.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
-    renderStats(assistsContainer, 'Asist Krallığı', 'text-green-400', topAssists, 'assists');
-    const topKeepers = playerStats.filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
-    renderStats(cleanSheetsContainer, 'Clean Sheet', 'text-cyan-400', topKeepers, 'cleanSheets');
+/**
+ * DEĞİŞTİRİLDİ: Bu fonksiyon artık daha modüler. Eskiden üç listeyi birden yönetirken,
+ * şimdi tek bir istatistik listesini (örn: sadece Gol Krallığı) render etmekten sorumlu.
+ * Bu değişiklik, main.js'deki updateKings fonksiyonunun yapısını basitleştiriyor.
+ * @param {HTMLElement} container Listenin render edileceği container
+ * @param {string} title Liste başlığı
+ * @param {string} titleColor Başlık rengi için CSS class'ı
+ * @param {Array} stats Render edilecek oyuncu istatistikleri listesi
+ * @param {string} type İstatistik türü
+ * @param {Array} teams Tüm takımların listesi
+ * @param {string} seasonId Sezon ID'si
+ */
+export function displayTopStats(container, title, titleColor, stats, type, teams, seasonId) {
+    if (!teams || !stats) { return renderError(container); }
+    
+    container.innerHTML = `<h3 class="text-lg font-bold text-center ${titleColor} mb-4 border-b border-gray-600 pb-2">${title}</h3>`;
+    const list = document.createElement('ul');
+    list.className = 'space-y-3';
+
+    if (stats.length === 0) {
+        list.innerHTML = `<li class="text-center text-gray-400">Veri yok.</li>`;
+    } else {
+        stats.forEach(p => {
+            const team = teams.find(t => t.id === p.teamId && t.name === p.teamName);
+            // Her bir oyuncu için sezon bilgisiyle birlikte liste elemanı oluşturulur.
+            const listItemElement = createStatListItem(p, team, type, seasonId); 
+            list.append(listItemElement);
+        });
+    }
+    container.append(list);
 }
+
 
 export function displayStandings(container, teams, fixtures) {
     if (!teams || !fixtures) return renderError(container);

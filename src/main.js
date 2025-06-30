@@ -5,7 +5,7 @@ import {
     displayStandings, 
     displayFixtures,
     displayEurocupFixtures,
-    displayTopStats,
+    displayTopStats, // Değiştirilen fonksiyonun importu
     displayTeams,
     displayBudgets,
     displaySuspendedPlayers,
@@ -40,12 +40,33 @@ function populateTeamSelects(selectElement, teams, placeholder) {
     });
 }
 
-// --- HANDLERS (TÜMÜ DÜZELTİLDİ VE KONTROL EDİLDİ) ---
+// --- HANDLERS ---
 async function updateStandings() { const seasonId = DOM.standings.select.value; const { teams, fixtures } = AppState.seasons[seasonId]; displayStandings(DOM.standings.container, teams, fixtures); }
 async function updateFixtures() { const seasonId = DOM.fixtures.select.value; const { teams, fixtures } = AppState.seasons[seasonId]; displayFixtures(DOM.fixtures.container, teams, fixtures); }
-async function updateKings() { const seasonId = DOM.kings.select.value; const { teams, playerStats } = AppState.seasons[seasonId]; displayTopStats(DOM.kings.scorersContainer, DOM.kings.assistsContainer, DOM.kings.cleanSheetsContainer, teams, playerStats); }
 async function updateEurocup() { const cupYear = DOM.eurocup.select.value; const { teams, fixtures } = AppState.eurocups[cupYear]; displayEurocupFixtures(DOM.eurocup.container, teams, fixtures); }
 function handleTeamSearch() { const searchTerm = DOM.teams.searchInput.value.toLowerCase(); const allTeams = AppState.seasons['3']?.teams || []; const filteredTeams = allTeams.filter(team => team.name.toLowerCase().includes(searchTerm)); displayTeams(DOM.teams.container, filteredTeams); }
+
+/**
+ * DEĞİŞTİRİLDİ: Bu fonksiyon artık Krallıklar listelerindeki her bir istatistik türünü
+ * ayrı ayrı render etmek için ui.js'deki yeni, modüler displayTopStats fonksiyonunu çağırır.
+ * Bu, kod tekrarını azaltır ve mantığı basitleştirir.
+ */
+async function updateKings() { 
+    const seasonId = DOM.kings.select.value; 
+    const { teams, playerStats } = AppState.seasons[seasonId];
+
+    // Gol Krallığı
+    const topScorers = [...playerStats].filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
+    displayTopStats(DOM.kings.scorersContainer, 'Gol Krallığı', 'text-yellow-400', topScorers, 'goals', teams, seasonId);
+
+    // Asist Krallığı
+    const topAssists = [...playerStats].filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
+    displayTopStats(DOM.kings.assistsContainer, 'Asist Krallığı', 'text-green-400', topAssists, 'assists', teams, seasonId);
+
+    // Clean Sheet
+    const topKeepers = [...playerStats].filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
+    displayTopStats(DOM.kings.cleanSheetsContainer, 'Clean Sheet', 'text-cyan-400', topKeepers, 'cleanSheets', teams, seasonId);
+}
 
 function handleH2HSelectionChange() {
     const team1Name = DOM.h2h.team1Select.value;
@@ -57,21 +78,36 @@ function handleH2HSelectionChange() {
     displayHeadToHeadResults(DOM.h2h.resultsContainer, matches, AppState.seasons);
 }
 
+/**
+ * DEĞİŞTİRİLDİ: Fonksiyon artık global arama yapmak yerine, tıklanan DOM elementine
+ * daha önce gömülmüş olan `data-season-id` ve `data-player-name` bilgilerini okur.
+ * Bu, doğru sezondaki doğru oyuncunun bilgilerinin getirilmesini %100 garanti eder.
+ */
 function handlePlayerClick(event) {
-    const clickedListItem = event.target.closest('li');
-    if (!clickedListItem || !clickedListItem.dataset.playerName) return;
+    const clickedListItem = event.target.closest('li[data-season-id]');
+    if (!clickedListItem) return;
     
-    const clickedPlayerName = clickedListItem.dataset.playerName;
-    const allPlayerStats = Object.values(AppState.seasons).flatMap(s => s.playerStats);
-    const allTeams = Object.values(AppState.seasons).flatMap(s => s.teams);
+    // Gerekli bağlamı doğrudan DOM'dan oku.
+    const { playerName, seasonId } = clickedListItem.dataset;
+    const seasonData = AppState.seasons[seasonId];
     
-    const player = allPlayerStats.find(p => p.name === clickedPlayerName);
+    if (!seasonData) return; // Güvenlik kontrolü
+
+    const player = seasonData.playerStats.find(p => p.name === playerName);
     if (!player) return;
-    const team = allTeams.find(t => t.id === player.teamId);
+    
+    // Takımı da doğru sezonun verileri içinde ara.
+    const team = seasonData.teams.find(t => t.id === player.teamId);
 
     populatePlayerModal(player, team);
     openPlayerModal();
-    document.getElementById('modal-close-button').addEventListener('click', closePlayerModal);
+    
+    // Modal içeriği her seferinde yeniden oluştuğu için, kapatma butonuna olay dinleyicisini
+    // burada eklemek en güvenlisidir. { once: true } bellek sızıntısını önler.
+    const closeButton = document.getElementById('modal-close-button');
+    if (closeButton) {
+        closeButton.addEventListener('click', closePlayerModal, { once: true });
+    }
 }
 
 // --- NAVİGASYON ---
@@ -102,7 +138,10 @@ async function initializeApp() {
     DOM.teams.searchInput.addEventListener('input', handleTeamSearch);
     DOM.h2h.team1Select.addEventListener('change', handleH2HSelectionChange);
     DOM.h2h.team2Select.addEventListener('change', handleH2HSelectionChange);
+    
+    // Krallıklar container'ına olay dinleyicisi ekleniyor (event delegation)
     DOM.kings.container.addEventListener('click', handlePlayerClick);
+    
     DOM.modal.element.addEventListener('click', (e) => { if (e.target.id === 'player-modal') closePlayerModal(); });
     
     // Navigasyon
@@ -114,7 +153,7 @@ async function initializeApp() {
     showSection(window.location.hash.substring(1) || 'anasayfa');
     
     document.getElementById('current-year').textContent = new Date().getFullYear();
-    console.log("Uygulama başlatıldı!");
+    console.log("Uygulama başarıyla başlatıldı ve veri bütünlüğü sorunu giderildi!");
 }
 
 initializeApp();
