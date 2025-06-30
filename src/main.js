@@ -65,9 +65,16 @@ function handleH2HSelectionChange() {
 }
 
 function handlePlayerClick(event) {
+    console.log('Krallıklar listesine tıklandı!');
+
     const clickedPlayerName = event.target.closest('li')?.dataset.playerName;
+    
+    // TEST 2: Tıkladığımız oyuncunun ismini doğru alabildik mi?
+    console.log('Tıklanan oyuncunun adı:', clickedPlayerName);
+
     if (!clickedPlayerName) return;
 
+    // ... fonksiyonun geri kalanı ...
     const allPlayerStats = Object.values(AppState.seasons).flatMap(s => s.playerStats);
     const allTeams = Object.values(AppState.seasons).flatMap(s => s.teams);
     
