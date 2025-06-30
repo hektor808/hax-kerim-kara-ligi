@@ -1,6 +1,7 @@
 import { calculateStandings } from './utils.js';
 
 // --- Arayüz Yardımcıları ---
+// Tekrar eden mesaj gösterme mantığını tek bir yerde toplar.
 
 function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
@@ -10,7 +11,9 @@ function renderEmpty(container, message) {
     container.innerHTML = `<p class="text-center text-gray-400 p-4">${message}</p>`;
 }
 
+
 // --- BİLEŞEN OLUŞTURUCU FONKSİYONLAR ---
+// Arayüzün küçük, yeniden kullanılabilir parçalarını oluşturan fonksiyonlar.
 
 /**
  * Tek bir takım kartı HTML elementi oluşturur.
@@ -36,40 +39,15 @@ function createTeamCard(team) {
     return card;
 }
 
-/**
- * Krallıklar listesi için tek bir <li> elementi oluşturur.
- * @param {object} player - Oyuncu istatistik verisi
- * @param {object} team - Oyuncunun takımı
- * @param {string} type - İstatistik türü ('goals', 'assists', 'cleanSheets')
- * @returns {HTMLElement} - Oluşturulan li elementi
- */
-function createStatListItem(player, team, type) {
-    const listItem = document.createElement('li');
-    listItem.className = 'flex items-center justify-between';
-    
-    const logoSrc = team ? team.logo : '/img/default-logo.png';
-    const statValue = player[type];
-    const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
-
-    listItem.innerHTML = `
-        <div class="flex items-center gap-3">
-            <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
-            <span class="text-white">${player.name}</span>
-        </div>
-        <span class="font-bold ${valueColorClass}">${statValue}</span>
-    `;
-    return listItem;
-}
-
 
 // --- ANA GÖSTERİM FONKSİYONLARI ---
+// Veriyi alıp, bileşenleri kullanarak ilgili HTML bölümünü güncelleyen ana fonksiyonlar.
 
 export function displayTeams(container, teamsData) {
     if (!teamsData) return renderError(container);
     container.innerHTML = '';
     if(teamsData.length === 0) return renderEmpty(container, "Arama kriterlerine uygun takım bulunamadı.");
 
-    // Her takım için bir kart oluşturup container'a ekliyoruz.
     teamsData.forEach(team => {
         const teamCardElement = createTeamCard(team);
         container.append(teamCardElement);
@@ -77,47 +55,50 @@ export function displayTeams(container, teamsData) {
 }
 
 export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsContainer, teams, playerStats) {
-    if (!teams || !playerStats) {
+     if (!teams || !playerStats) {
         renderError(scorersContainer);
         renderError(assistsContainer);
         renderError(cleanSheetsContainer);
         return;
     }
-
-    const renderStats = (container, title, titleColor, stats, type) => {
-        container.innerHTML = `<h3 class="text-lg font-bold text-center ${titleColor} mb-4 border-b border-gray-600 pb-2">${title}</h3>`;
-        const list = document.createElement('ul');
-        list.className = 'space-y-3';
-
+    
+    const renderStatList = (stats, type) => {
         if (stats.length === 0) {
-            const emptyItem = document.createElement('li');
-            emptyItem.className = 'text-center text-gray-400';
-            emptyItem.textContent = 'Veri yok.';
-            list.append(emptyItem);
-        } else {
-            stats.forEach(p => {
-                const team = teams.find(t => t.id === p.teamId);
-                const listItemElement = createStatListItem(p, team, type);
-                list.append(listItemElement);
-            });
+            return '<li class="text-center text-gray-400">Veri yok.</li>';
         }
-        container.append(list);
+        return stats.map(p => {
+            const team = teams.find(t => t.id === p.teamId);
+            const logoSrc = team ? team.logo : '/img/default-logo.png';
+            const statValue = p[type];
+            const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
+
+            return `
+            <li class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
+                    <span class="text-white">${p.name}</span>
+                </div>
+                <span class="font-bold ${valueColorClass}">${statValue}</span>
+            </li>`;
+        }).join('');
     };
 
     const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
-    renderStats(scorersContainer, 'Gol Krallığı', 'text-yellow-400', topScorers, 'goals');
+    scorersContainer.innerHTML = `
+        <h3 class="text-lg font-bold text-center text-yellow-400 mb-4 border-b border-yellow-500 pb-2">Gol Krallığı</h3>
+        <ul class="space-y-3">${renderStatList(topScorers, 'goals')}</ul>`;
 
     const topAssists = playerStats.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
-    renderStats(assistsContainer, 'Asist Krallığı', 'text-green-400', topAssists, 'assists');
+    assistsContainer.innerHTML = `
+        <h3 class="text-lg font-bold text-center text-green-400 mb-4 border-b border-green-500 pb-2">Asist Krallığı</h3>
+        <ul class="space-y-3">${renderStatList(topAssists, 'assists')}</ul>`;
 
     const topKeepers = playerStats.filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
-    renderStats(cleanSheetsContainer, 'Clean Sheet', 'text-cyan-400', topKeepers, 'cleanSheets');
+    cleanSheetsContainer.innerHTML = `
+        <h3 class="text-lg font-bold text-center text-cyan-400 mb-4 border-b border-cyan-500 pb-2">Clean Sheet</h3>
+        <ul class="space-y-3">${renderStatList(topKeepers, 'cleanSheets')}</ul>`;
 }
 
-// Diğer display... fonksiyonları şimdilik eski yapıda kalabilir, çünkü onlar zaten
-// büyük ve tekrar etmeyen HTML blokları oluşturuyor. İhtiyaç duyulursa onlar da
-// gelecekte bu bileşen yapısına geçirilebilir.
-// Bu dosyanın tam olması için onları da ekliyorum.
 export function displayStandings(container, teams, fixtures) {
     if (!teams || !fixtures) return renderError(container);
     const standings = calculateStandings(teams, fixtures);
@@ -144,6 +125,7 @@ export function displayStandings(container, teams, fixtures) {
         container.innerHTML += row;
     });
 }
+
 export function displayFixtures(container, teamsData, fixturesData) {
      if (!teamsData || !fixturesData) return renderError(container);
     container.innerHTML = '';
@@ -167,7 +149,7 @@ export function displayFixtures(container, teamsData, fixturesData) {
             const fixtureElement = document.createElement('div');
             fixtureElement.className = 'flex items-center justify-between p-2 sm:p-3 rounded-md hover:bg-gray-700/50';
             let scoreDisplay;
-            if(fixture.status === 'Oynandı') {
+            if(fixture.status === 'Oynandı' && fixture.homeScore !== null) {
                 scoreDisplay = `<span class="font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white">${fixture.homeScore}</span><span class="font-bold text-gray-400 mx-1 sm:mx-3">-</span><span class="font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white">${fixture.awayScore}</span>`;
             } else {
                 scoreDisplay = `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Belirsiz'}</span>`;
@@ -178,6 +160,7 @@ export function displayFixtures(container, teamsData, fixturesData) {
         container.appendChild(weekContainer);
     }
 }
+
 export function displayEurocupFixtures(container, teamsData, fixturesData) {
     if (!teamsData || !fixturesData) return renderError(container);
     container.innerHTML = '';
@@ -216,6 +199,7 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
         container.appendChild(stageContainer);
     });
 }
+
 export function displayBudgets(container, teamsData) {
     if (!teamsData) return renderError(container);
     container.innerHTML = '';
@@ -227,6 +211,7 @@ export function displayBudgets(container, teamsData) {
         container.appendChild(card);
     });
 }
+
 export function displaySuspendedPlayers(container, teamsData, playerStats) {
      if (!teamsData || !playerStats) return renderError(container);
     container.innerHTML = '';
@@ -239,5 +224,46 @@ export function displaySuspendedPlayers(container, teamsData, playerStats) {
         card.className = 'flex flex-col bg-red-900/30 border border-red-700 p-4 rounded-xl mb-3 shadow max-w-2xl mx-auto';
         card.innerHTML = `<div class="flex items-center justify-between mb-2"><div class="flex items-center gap-4"><img src="${team.logo}" alt="${team.name}" class="w-10 h-10 object-contain rounded" /><div><p class="text-white font-bold">${player.name} <span class="text-gray-400">(${team.name})</span></p><p class="text-white text-lg">${player.redCards > 0 ? '🟥 ' + player.redCards : '🟨 ' + player.yellowCards}</p></div></div></div><div class="text-sm text-white mt-1 px-1">📝 Ceza Nedeni: <span class="font-semibold">${player.suspension.reason}</span><br /><span class="italic text-gray-400 text-xs">${player.suspension.bannedWeek}. hafta maçını kaçıracak.</span></div>`;
         container.appendChild(card);
+    });
+}
+
+export function displayHeadToHeadResults(container, matches, teams) {
+    container.innerHTML = '';
+
+    if (matches.length === 0) {
+        return renderEmpty(container, "Bu iki takım arasında oynanmış bir maç bulunamadı.");
+    }
+
+    matches.sort((a, b) => a.week - b.week);
+
+    matches.forEach(match => {
+        const homeTeam = teams.find(t => t.id === match.homeTeamId);
+        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+
+        if (!homeTeam || !awayTeam) return;
+
+        const matchElement = document.createElement('div');
+        matchElement.className = 'flex items-center justify-between p-3 rounded-md bg-gray-700/50';
+
+        const scoreDisplay = (match.status === 'Oynandı') ? `
+            <span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.homeScore}</span>
+            <span class="font-bold text-gray-400 mx-3">-</span>
+            <span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.awayScore}</span>
+        ` : `<span class="text-xs text-gray-400">${match.date || 'Belirsiz'}</span>`;
+
+        matchElement.innerHTML = `
+            <div class="flex items-center gap-3 text-right justify-end w-2/5">
+                <span class="font-semibold text-white truncate">${homeTeam.name}</span>
+                <img src="${homeTeam.logo}" alt="${homeTeam.name} logo" class="w-8 h-8 object-contain rounded" />
+            </div>
+            <div class="w-1/5 text-center flex items-center justify-center min-w-max">
+                ${scoreDisplay}
+            </div>
+            <div class="flex items-center gap-3 w-2/5">
+                <img src="${awayTeam.logo}" alt="${awayTeam.name} logo" class="w-8 h-8 object-contain rounded" />
+                <span class="font-semibold text-white truncate">${awayTeam.name}</span>
+            </div>
+        `;
+        container.append(matchElement);
     });
 }

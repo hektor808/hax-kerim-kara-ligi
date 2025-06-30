@@ -1,5 +1,6 @@
 import './style.css';
 import { getSeasonData, getEurocupData } from './api.js';
+import { calculateStandings, findHeadToHeadMatches } from './utils.js';
 import { 
     displayStandings, 
     displayFixtures,
@@ -7,18 +8,17 @@ import {
     displayTopStats,
     displayTeams,
     displayBudgets,
-    displaySuspendedPlayers
+    displaySuspendedPlayers,
+    displayHeadToHeadResults
 } from './ui.js';
 
-// --- UYGULAMA DURUMU VE ÖNBELLEK (STATE & CACHE) ---
-// Sunucudan çekilen verileri burada saklayarak gereksiz ağ isteklerini önlüyoruz.
+// --- UYGULAMA DURUMU VE ÖNBELLEK ---
 const AppState = {
     seasons: {},
     eurocups: {},
 };
 
 // --- DOM ELEMENTLERİ ---
-// HTML'deki elementlere kolayca erişmek için tek bir merkezi nesne.
 const DOM = {
     standings: {
         select: document.getElementById('seasonSelectStandings'),
@@ -48,6 +48,11 @@ const DOM = {
     suspensions: {
         container: document.getElementById('suspended-players-container'),
     },
+    h2h: {
+        team1Select: document.getElementById('h2h-team1-select'),
+        team2Select: document.getElementById('h2h-team2-select'),
+        resultsContainer: document.getElementById('h2h-results-container'),
+    },
     navigation: {
         sections: document.querySelectorAll('.content-section'),
         navLinks: document.querySelectorAll('.nav-link'),
@@ -57,75 +62,73 @@ const DOM = {
     }
 };
 
-// --- HANDLERS (OLAY YÖNETİCİLERİ) ---
+// --- YARDIMCI FONKSİYONLAR ---
+function populateTeamSelects(selectElement, teams, placeholder) {
+    selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+    teams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name;
+        selectElement.append(option);
+    });
+}
 
-// Dropdown menülerden bir sezon seçildiğinde ilgili bölümü günceller.
+// --- HANDLERS ---
 async function updateStandings() {
     const seasonId = DOM.standings.select.value;
-    if (!AppState.seasons[seasonId]) {
-        AppState.seasons[seasonId] = await getSeasonData(seasonId);
-    }
     const { teams, fixtures } = AppState.seasons[seasonId];
     displayStandings(DOM.standings.container, teams, fixtures);
 }
 
 async function updateFixtures() {
     const seasonId = DOM.fixtures.select.value;
-    if (!AppState.seasons[seasonId]) {
-        AppState.seasons[seasonId] = await getSeasonData(seasonId);
-    }
     const { teams, fixtures } = AppState.seasons[seasonId];
     displayFixtures(DOM.fixtures.container, teams, fixtures);
 }
 
 async function updateKings() {
     const seasonId = DOM.kings.select.value;
-    if (!AppState.seasons[seasonId]) {
-        AppState.seasons[seasonId] = await getSeasonData(seasonId);
-    }
     const { teams, playerStats } = AppState.seasons[seasonId];
-    displayTopStats(
-        DOM.kings.scorersContainer,
-        DOM.kings.assistsContainer,
-        DOM.kings.cleanSheetsContainer,
-        teams,
-        playerStats
-    );
+    displayTopStats(DOM.kings.scorersContainer, DOM.kings.assistsContainer, DOM.kings.cleanSheetsContainer, teams, playerStats);
 }
 
 async function updateEurocup() {
     const cupYear = DOM.eurocup.select.value;
-    if (!AppState.eurocups[cupYear]) {
-        AppState.eurocups[cupYear] = await getEurocupData(cupYear);
-    }
     const { teams, fixtures } = AppState.eurocups[cupYear];
     displayEurocupFixtures(DOM.eurocup.container, teams, fixtures);
 }
 
-// Takım arama kutusuna yazı yazıldığında takımları filtreler.
 function handleTeamSearch() {
     const searchTerm = DOM.teams.searchInput.value.toLowerCase();
-    // Arama sadece güncel sezon (Sezon 3) takımları için çalışır.
     const allTeams = AppState.seasons['3']?.teams || [];
-
-    const filteredTeams = allTeams.filter(team => 
-        team.name.toLowerCase().includes(searchTerm)
-    );
-
+    const filteredTeams = allTeams.filter(team => team.name.toLowerCase().includes(searchTerm));
     displayTeams(DOM.teams.container, filteredTeams);
+}
+
+function handleH2HSelectionChange() {
+    const team1Id = parseInt(DOM.h2h.team1Select.value, 10);
+    const team2Id = parseInt(DOM.h2h.team2Select.value, 10);
+    
+    // Bütün sezonlardaki fikstürleri ve takımları birleştirerek tam bir rekabet geçmişi sunarız.
+    const allFixtures = Object.values(AppState.seasons).flatMap(s => s.fixtures);
+    const allTeams = Object.values(AppState.seasons).flatMap(s => s.teams);
+    const uniqueTeams = Array.from(new Map(allTeams.map(team => [team.id, team])).values());
+
+    if (!team1Id || !team2Id || team1Id === team2Id) {
+        DOM.h2h.resultsContainer.innerHTML = '';
+        return;
+    }
+    const matches = findHeadToHeadMatches(team1Id, team2Id, allFixtures);
+    displayHeadToHeadResults(DOM.h2h.resultsContainer, matches, uniqueTeams);
 }
 
 // --- NAVİGASYON ---
 function showSection(id) {
-    DOM.navigation.sections.forEach(section => {
-        section.classList.toggle('active', section.id === id);
-    });
+    DOM.navigation.sections.forEach(section => section.classList.toggle('active', section.id === id));
     const selector = `.nav-link[href="#${id}"]`;
     DOM.navigation.navLinks.forEach(link => link.classList.remove('active'));
     document.querySelector(selector)?.classList.add('active');
-    if (!DOM.navigation.mobileMenu.classList.contains('hidden')) {
-        DOM.navigation.mobileMenu.classList.add('hidden');
-    }
+    if (!DOM.navigation.mobileMenu.classList.contains('hidden')) DOM.navigation.mobileMenu.classList.add('hidden');
 }
 
 function handleLinkClick(e) {
@@ -135,59 +138,60 @@ function handleLinkClick(e) {
     window.history.pushState(null, '', `#${targetId}`);
 }
 
-// --- UYGULAMAYI BAŞLATMA FONKSİYONU ---
+// --- UYGULAMAYI BAŞLATMA ---
 async function initializeApp() {
-    // Varsayılan olarak gösterilecek sezon ve turnuva ID'leri
-    const initialSeasonId = '3';
-    const initialEurocupId = '25';
-
-    // Sayfa ilk yüklendiğinde gerekli tüm verileri paralel olarak çek.
-    // Bu, birden çok gereksiz ağ isteğini önler.
-    const [seasonData, eurocupData] = await Promise.all([
-        getSeasonData(initialSeasonId),
-        getEurocupData(initialEurocupId)
+    // Tüm verileri sayfa ilk açıldığında paralel olarak çek, bu sayede uygulama çok daha hızlı ve akıcı olur.
+    const [season1Data, season2Data, season3Data, eurocup24Data, eurocup25Data] = await Promise.all([
+        getSeasonData('1'),
+        getSeasonData('2'),
+        getSeasonData('3'),
+        getEurocupData('24'),
+        getEurocupData('25'),
     ]);
     
-    // Çekilen verileri ileride kullanmak üzere önbelleğe al.
-    AppState.seasons[initialSeasonId] = seasonData;
-    AppState.eurocups[initialEurocupId] = eurocupData;
+    // Tüm veriyi ileride kullanmak üzere önbelleğe al.
+    AppState.seasons['1'] = season1Data;
+    AppState.seasons['2'] = season2Data;
+    AppState.seasons['3'] = season3Data;
+    AppState.eurocups['24'] = eurocup24Data;
+    AppState.eurocups['25'] = eurocup25Data;
+    
+    // Varsayılan görünümleri önceden çekilmiş verilerle doldur.
+    displayTeams(DOM.teams.container, season3Data.teams);
+    displayBudgets(DOM.budgets.container, season3Data.teams);
+    displaySuspendedPlayers(DOM.suspensions.container, season3Data.teams, season3Data.playerStats);
+    updateStandings(); // Varsayılan seçili sezona göre doldurur
+    updateFixtures();
+    updateKings();
+    updateEurocup();
 
-    // Arayüzü önceden çekilmiş verilerle doldurarak hızlı bir ilk gösterim sağla.
-    displayTeams(DOM.teams.container, seasonData.teams);
-    displayBudgets(DOM.budgets.container, seasonData.teams);
-    displaySuspendedPlayers(DOM.suspensions.container, seasonData.teams, seasonData.playerStats);
-    displayStandings(DOM.standings.container, seasonData.teams, seasonData.fixtures);
-    displayFixtures(DOM.fixtures.container, seasonData.teams, seasonData.fixtures);
-    displayTopStats(DOM.kings.scorersContainer, DOM.kings.assistsContainer, DOM.kings.cleanSheetsContainer, seasonData.teams, seasonData.playerStats);
-    displayEurocupFixtures(DOM.eurocup.container, eurocupData.teams, eurocupData.fixtures);
+    // İkili Rekabet dropdown'larını tüm sezonlardaki takımlarla doldur.
+    const allTeams = Object.values(AppState.seasons).flatMap(s => s.teams);
+    const uniqueTeams = Array.from(new Map(allTeams.map(team => [team.name, team])).values()).sort((a,b) => a.name.localeCompare(b.name));
+    populateTeamSelects(DOM.h2h.team1Select, uniqueTeams, '1. Takımı Seçin');
+    populateTeamSelects(DOM.h2h.team2Select, uniqueTeams, '2. Takımı Seçin');
 
-    // Olay Dinleyicilerini (Event Listeners) Kur
+    // Olay Dinleyicileri Kurulumu
     DOM.standings.select.addEventListener('change', updateStandings);
     DOM.fixtures.select.addEventListener('change', updateFixtures);
     DOM.kings.select.addEventListener('change', updateKings);
     DOM.eurocup.select.addEventListener('change', updateEurocup);
     DOM.teams.searchInput.addEventListener('input', handleTeamSearch);
-
+    DOM.h2h.team1Select.addEventListener('change', handleH2HSelectionChange);
+    DOM.h2h.team2Select.addEventListener('change', handleH2HSelectionChange);
+    
     // Navigasyon Olay Dinleyicileri
     DOM.navigation.navLinks.forEach(link => link.addEventListener('click', handleLinkClick));
     DOM.navigation.mobileNavLinks.forEach(link => link.addEventListener('click', handleLinkClick));
-    DOM.navigation.mobileMenuButton.addEventListener('click', () => {
-        DOM.navigation.mobileMenu.classList.toggle('hidden');
-    });
-    window.addEventListener('popstate', () => {
-        const hash = window.location.hash.substring(1) || 'anasayfa';
-        showSection(hash);
-    });
+    DOM.navigation.mobileMenuButton.addEventListener('click', () => DOM.navigation.mobileMenu.classList.toggle('hidden'));
+    window.addEventListener('popstate', () => showSection(window.location.hash.substring(1) || 'anasayfa'));
     
-    // Sayfa ilk açıldığında URL'ye göre doğru bölümü göster
-    const initialHash = window.location.hash.substring(1) || 'anasayfa';
-    showSection(initialHash);
+    // Sayfa ilk açıldığında doğru bölümü göster
+    showSection(window.location.hash.substring(1) || 'anasayfa');
     
-    // Footer'daki yılı güncelle
     document.getElementById('current-year').textContent = new Date().getFullYear();
     
-    console.log("Uygulama tüm iyileştirmelerle başarıyla başlatıldı!");
+    console.log("Uygulama tüm özellikleriyle başarıyla başlatıldı!");
 }
 
-// Uygulamayı başlat
 initializeApp();
