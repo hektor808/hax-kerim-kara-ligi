@@ -17,20 +17,11 @@ import {
   renderError,
 } from './ui.js';
 
-/**
- * Uygulamanın genel durumunu ve önbelleği yöneten merkezi nesne.
- * Map kullanmak, key olarak herhangi bir tipin kullanılmasına izin verdiği
- * ve eleman ekleme/silme performansı büyük setlerde daha iyi olduğu için tercih edilir.
- * Ayrıca, bir verinin yüklenme durumunu (race condition önlemek için) takip eder.
- */
 const AppState = {
-  seasonCache: new Map(), // Örn: '3' -> { status: 'success', data: {..} }
+  seasonCache: new Map(),
   eurocupCache: new Map(),
 };
 
-/**
- * DOM elemanlarına kolay erişim için merkezi bir nesne.
- */
 const DOM = {
   standings: {
     select: document.getElementById('seasonSelectStandings'),
@@ -202,13 +193,37 @@ async function handlePlayerClick(event) {
   }
 }
 
+// YENİ: İkili rekabet menülerini senkronize eden fonksiyon.
+/**
+ * Bir dropdown'da seçilen değeri diğer dropdown'da pasif hale getirir.
+ * @param {HTMLSelectElement} sourceSelect Değişiklik yapılan kaynak menü
+ * @param {HTMLSelectElement} targetSelect Etkilenecek hedef menü
+ */
+function syncH2hDropdowns(sourceSelect, targetSelect) {
+  const selectedValue = sourceSelect.value;
+  
+  // Hedef menünün şu anki seçimi geçersiz hale geldiyse, hedef menüyü sıfırla.
+  if (targetSelect.value === selectedValue) {
+    targetSelect.value = "";
+  }
+  
+  // Hedef menüdeki opsiyonları gez
+  for (const option of targetSelect.options) {
+    // Kaynakta seçilen değeri hedefte pasif yap, ama placeholder'ı pasif yapma.
+    option.disabled = (option.value === selectedValue && selectedValue !== "");
+  }
+}
+
 async function updateHeadToHead() {
   const team1Name = DOM.h2h.team1Select.value;
   const team2Name = DOM.h2h.team2Select.value;
+
+  // GÜNCELLENDİ: Guard clause (koruma) aynı takımın seçilmesi durumunu da kontrol ediyor.
   if (!team1Name || !team2Name || team1Name === team2Name) {
-    DOM.h2h.resultsContainer.innerHTML = '';
+    DOM.h2h.resultsContainer.innerHTML = ''; // Eğer seçimler tam değilse veya aynıysa sonuçları temizle
     return;
   }
+
   showLoading(DOM.h2h.resultsContainer);
   try {
     const seasons = ['1', '2', '3'];
@@ -231,7 +246,6 @@ function showSection(id) {
     DOM.navigation.mobileMenu.classList.add('hidden');
   }
 
-  // Aktif bölüme göre ilgili içeriği yükle
   switch (id) {
     case 'puan': updateStandings(); break;
     case 'fikstur': updateFixtures(); break;
@@ -263,13 +277,11 @@ async function initializeApp() {
   DOM.eurocup.select.value = initialCup;
 
   try {
-    // Statik bölümler için varsayılan sezon verisini (Sezon 3) çek ve göster
     const defaultSeasonData = await getCachedSeasonData('3');
     displayTeams(DOM.teams.container, defaultSeasonData.teams);
     displayBudgets(DOM.budgets.container, defaultSeasonData.teams);
     displaySuspendedPlayers(DOM.suspensions.container, defaultSeasonData.teams, defaultSeasonData.playerStats);
 
-    // H2H için tüm takım verilerini arka planda önbelleğe al
     const seasons = ['1', '2', '3'];
     const seasonResults = await Promise.all(seasons.map(id => getCachedSeasonData(id)));
     const allTeams = seasonResults.flatMap(s => s.teams);
@@ -296,13 +308,21 @@ async function initializeApp() {
   DOM.fixtures.select.addEventListener('change', updateFixtures);
   DOM.kings.select.addEventListener('change', updateKings);
   DOM.eurocup.select.addEventListener('change', updateEurocup);
-  DOM.h2h.team1Select.addEventListener('change', updateHeadToHead);
-  DOM.h2h.team2Select.addEventListener('change', updateHeadToHead);
   DOM.kings.container.addEventListener('click', handlePlayerClick);
   DOM.modal.element.addEventListener('click', (e) => { if (e.target.id === 'player-modal') closePlayerModal(); });
   
+  // GÜNCELLENDİ: H2H olay dinleyicileri artık senkronizasyon fonksiyonunu da çağırıyor.
+  DOM.h2h.team1Select.addEventListener('change', () => {
+    syncH2hDropdowns(DOM.h2h.team1Select, DOM.h2h.team2Select);
+    updateHeadToHead();
+  });
+  DOM.h2h.team2Select.addEventListener('change', () => {
+    syncH2hDropdowns(DOM.h2h.team2Select, DOM.h2h.team1Select);
+    updateHeadToHead();
+  });
+  
   DOM.teams.searchInput.addEventListener('input', async () => {
-    const seasonData = await getCachedSeasonData('3'); // Arama hep son sezon takımlarında yapılır
+    const seasonData = await getCachedSeasonData('3');
     const filteredTeams = seasonData.teams.filter(team => team.name.toLowerCase().includes(DOM.teams.searchInput.value.toLowerCase()));
     displayTeams(DOM.teams.container, filteredTeams);
   });
@@ -321,7 +341,6 @@ async function initializeApp() {
     showSection(hash);
   });
   
-  // Başlangıç sayfasını göster
   showSection(window.location.hash.substring(1) || 'anasayfa');
   document.getElementById('current-year').textContent = new Date().getFullYear();
 }
