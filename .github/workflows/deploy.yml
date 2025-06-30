@@ -39,6 +39,12 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+
+      # --- YENİ EKLENEN ADIM ---
+      - name: Run tests
+        run: npm run test
+      # --------------------------
+
       - name: Build
         run: npm run build
       - name: Setup Pages
