@@ -61,17 +61,36 @@ export function calculateStandings(teams, fixtures) {
 }
 
 /**
- * İki takım arasındaki tüm maçları bulur.
- * @param {number} team1Id - Birinci takımın ID'si
- * @param {number} team2Id - İkinci takımın ID'si
- * @param {Array} fixtures - Tüm fikstür listesi
- * @returns {Array} - İki takım arasındaki maçların listesi
+ * İki takımın isimlerine göre tüm sezonlardaki maçlarını bulur.
+ * @param {string} team1Name - Birinci takımın adı.
+ * @param {string} team2Name - İkinci takımın adı.
+ * @param {object} allSeasonsData - Tüm sezonların verilerini içeren nesne.
+ * @returns {Array} - İki takım arasındaki tüm maçların listesi.
  */
-export function findHeadToHeadMatches(team1Id, team2Id, fixtures) {
-  if (!team1Id || !team2Id || !fixtures) return [];
+export function findMatchesByTeamNames(team1Name, team2Name, allSeasonsData) {
+    if (!team1Name || !team2Name) return [];
 
-  return fixtures.filter(match => 
-    (match.homeTeamId === team1Id && match.awayTeamId === team2Id) ||
-    (match.homeTeamId === team2Id && match.awayTeamId === team1Id)
-  );
+    const allMatches = [];
+
+    // Her sezonu ayrı ayrı geziyoruz
+    for (const seasonId in allSeasonsData) {
+        const season = allSeasonsData[seasonId];
+        const teamsInSeason = season.teams;
+        const fixturesInSeason = season.fixtures;
+
+        // O sezondaki takım isimlerinden ID'leri buluyoruz
+        const team1 = teamsInSeason.find(t => t.name === team1Name);
+        const team2 = teamsInSeason.find(t => t.name === team2Name);
+
+        // Eğer iki takım da o sezonda mevcutsa, aralarındaki maçları arıyoruz
+        if (team1 && team2) {
+            const matches = fixturesInSeason.filter(match =>
+                (match.homeTeamId === team1.id && match.awayTeamId === team2.id) ||
+                (match.homeTeamId === team2.id && match.awayTeamId === team1.id)
+            );
+            // Bulunan maçların yanına sezon bilgisini de ekleyip ana listeye ekliyoruz
+            allMatches.push(...matches.map(m => ({ ...m, seasonId })));
+        }
+    }
+    return allMatches;
 }
