@@ -197,28 +197,34 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
 
     const DEFAULT_LOGO_PATH = 'img/default-logo.png';
 
-    const groupedByWeek = fixturesData.reduce((acc, fixture) => {
-        (acc[fixture.week] = acc[fixture.week] || []).push(fixture);
+    // Maçları 'stageName' özelliğine göre grupla
+    const groupedByStage = fixturesData.reduce((acc, fixture) => {
+        const stage = fixture.stageName || 'Diğer Maçlar'; // stageName yoksa varsayılan bir grup ata
+        (acc[stage] = acc[stage] || []).push(fixture);
         return acc;
     }, {});
 
-    Object.keys(groupedByWeek).sort((a, b) => Number(a) - Number(b)).forEach(week => {
-        const weekContainer = document.createElement('div');
-        weekContainer.className = 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8';
+    // Aşamaları istediğimiz sırada (Yarı Final, 3.'lük, Final) göstermek için
+    const stageOrder = ['Yarı Final', '3.\'lük Maçı', 'Final'];
 
-        const title = document.createElement('h3');
-        title.className = 'text-lg sm:text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2';
-        title.textContent = `${week}. Hafta Maçları`;
-        weekContainer.append(title);
+    stageOrder.forEach(stageName => {
+        if (!groupedByStage[stageName]) return; // Eğer o aşamada maç yoksa atla
 
-        groupedByWeek[week].forEach(fixture => {
+        const stageContainer = createDOMElement('div', { class: 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8' });
+
+        const title = createDOMElement('h3', { 
+            class: 'text-lg sm:text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2',
+            textContent: stageName
+        });
+        stageContainer.append(title);
+
+        groupedByStage[stageName].forEach(fixture => {
             const homeTeam = teamsData.find(t => t.id === fixture.homeTeamId);
             const awayTeam = teamsData.find(t => t.id === fixture.awayTeamId);
             if (!homeTeam || !awayTeam) return;
 
-            const fixtureElement = document.createElement('div');
-            fixtureElement.className = 'flex items-center justify-between p-2 sm:p-3 rounded-md hover:bg-gray-700/50';
-
+            const fixtureElement = createDOMElement('div', { class: 'flex items-center justify-between p-2 sm:p-3 rounded-md' });
+            
             const scoreDisplay = fixture.status === 'Oynandı' && fixture.homeScore !== null
                 ? `<span class="font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white">${fixture.homeScore}</span><span class="font-bold text-gray-400 mx-1 sm:mx-3">-</span><span class="font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white">${fixture.awayScore}</span>`
                 : `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Belirsiz'}</span>`;
@@ -233,9 +239,9 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
                 <img src="${awayTeam.logo || DEFAULT_LOGO_PATH}" alt="${awayTeam.name} logo" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
                 <span class="font-semibold text-white truncate sm:inline">${awayTeam.name}</span>
               </div>`;
-            weekContainer.appendChild(fixtureElement);
+            stageContainer.appendChild(fixtureElement);
         });
-        container.appendChild(weekContainer);
+        container.appendChild(stageContainer);
     });
 }
 
