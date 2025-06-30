@@ -24,8 +24,8 @@ export async function getSeasonData(seasonId) {
  */
 export async function getEurocupData(cupId) {
     try {
-        // BAŞINDAKİ / KALDIRILDI, YERİNE ./ EKLENDİ
-        const response = await fetch(`./data/eurocup${cupId}.json`);
+        // YOL, VITE YAPISINA UYGUN OLARAK GÜNCELLENDİ
+        const response = await fetch(`/data/eurocup${cupId}.json`); // <--- DOĞRU YOL
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: eurocup${cupId}.json`);
         }
