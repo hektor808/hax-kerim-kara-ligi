@@ -1,4 +1,3 @@
-// .eslintrc.cjs
 module.exports = {
   env: {
     browser: true,
@@ -6,14 +5,28 @@ module.exports = {
     node: true,
   },
   extends: [
-    "eslint:recommended",
-    "prettier" // ESLint ve Prettier'in çakışmasını engeller
+    'eslint:recommended',
+    'plugin:react/recommended', // React için önerilen kurallar
+    'prettier', // Prettier ile çakışan kuralları devre dışı bırakır
   ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
+  plugins: ['react'],
+  settings: {
+    react: {
+      version: 'detect', // Yüklü React versiyonunu otomatik algılar
+    },
+  },
   rules: {
-    // Buraya gelecekte özel kurallar ekleyebilirsiniz
+    // Proje ilerledikçe buraya kendi özel kurallarınızı ekleyebilirsiniz.
+    // Örnek: 'no-console': 'warn', // console.log kullanımında uyarır.
+  },
+  // Vitest test dosyaları için global değişkenleri tanımlar
+  globals: {
+    describe: 'readonly',
+    it: 'readonly',
+    expect: 'readonly',
   },
 };
