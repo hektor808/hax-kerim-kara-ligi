@@ -1,124 +1,151 @@
 // Dosya Yolu: backend/src/controllers/userController.js
 
+// 1. GEREKLİ MODÜLLERİN YÜKLENMESİ
+// ----------------------------------------------------
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
+const asyncHandler = require('express-async-handler');
 const { updateUserSchema, createUserSchema } = require('../validators/userValidator');
+const ErrorResponse = require('../utils/errorResponse'); // Özelleştirilmiş Hata Sınıfımız
 
-// Tüm kullanıcıları getirir
-const getAllUsers = async (req, res) => {
-    try {
-        const result = await pool.query('SELECT id, name, email, role, created_at FROM users');
-        res.status(200).json(result.rows);
-    } catch (error) {
-        console.error('Tüm kullanıcılar getirilirken hata:', error);
-        res.status(500).json({ message: 'Sunucu hatası' });
+
+// 2. CONTROLLER FONKSİYONLARI
+// ----------------------------------------------------
+// Tüm fonksiyonlar 'express-async-handler' ile sarmalanmıştır.
+// Bu yardımcı araç, async fonksiyonlar içindeki hataları otomatik olarak yakalar
+// ve 'next(error)' fonksiyonunu çağırarak merkezi hata yöneticimize (errorHandler.js) devreder.
+// Bu sayede her fonksiyona try-catch bloğu yazmaktan kurtuluruz.
+
+
+/**
+ * @desc    Tüm kullanıcıları getirir
+ * @route   GET /api/users
+ * @access  Public (Örnek olarak, normalde Admin olmalı)
+ */
+const getAllUsers = asyncHandler(async (req, res, next) => {
+    const result = await pool.query('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC');
+    
+    res.status(200).json({
+        success: true,
+        count: result.rowCount,
+        data: result.rows
+    });
+});
+
+
+/**
+ * @desc    ID'ye göre tek bir kullanıcıyı getirir
+ * @route   GET /api/users/:id
+ * @access  Public (Örnek olarak, normalde Admin veya kullanıcı kendisi olmalı)
+ */
+const getUserById = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const result = await pool.query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+        // Kullanıcı bulunamazsa, 404 hatası oluşturup merkezi yöneticiye pasla.
+        return next(new ErrorResponse(`ID'si ${id} olan kullanıcı bulunamadı.`, 404));
     }
-};
 
-// ID'ye göre tek bir kullanıcıyı getirir
-const getUserById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [id]);
+    res.status(200).json({
+        success: true,
+        data: result.rows[0]
+    });
+});
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
-        }
-        res.status(200).json(result.rows[0]);
-    } catch (error) {
-        console.error('Kullanıcı getirilirken hata:', error);
-        res.status(500).json({ message: 'Sunucu hatası' });
+
+/**
+ * @desc    Yeni bir kullanıcı oluşturur
+ * @route   POST /api/users
+ * @access  Public
+ */
+const createUser = asyncHandler(async (req, res, next) => {
+    const { error, value } = createUserSchema.validate(req.body);
+    if (error) {
+        return next(new ErrorResponse(error.details[0].message, 400));
     }
-};
 
-// Yeni bir kullanıcı oluşturur
-const createUser = async (req, res) => {
+    const { name, email, password } = value;
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     try {
-        // Gelen veriyi validasyondan geçir
-        const { error, value } = createUserSchema.validate(req.body);
-        if (error) {
-            return res.status(400).json({ message: error.details[0].message });
-        }
-
-        const { name, email, password } = value;
-
-        // Şifreyi hash'le
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Yeni kullanıcıyı veritabanına ekle (varsayılan 'user' rolüyle)
-        const newUser = await pool.query(
-            'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *',
+        const newUserResult = await pool.query(
+            'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email, role, created_at',
             [name, email, hashedPassword]
         );
 
-        // Yanıttan şifreyi kaldır
-        const { password: _, ...userToReturn } = newUser.rows[0];
-        res.status(201).json(userToReturn);
-
-    } catch (error) {
-        // E-posta zaten mevcutsa veritabanı unique kısıtlaması hatası verir
-        if (error.code === '23505') { 
-            return res.status(409).json({ message: 'Bu e-posta adresi zaten kullanılıyor.' });
+        res.status(201).json({
+            success: true,
+            data: newUserResult.rows[0]
+        });
+    } catch (dbError) {
+        // Veritabanından gelen unique constraint hatasını yakala (e-posta tekrarı)
+        if (dbError.code === '23505') {
+            return next(new ErrorResponse('Bu e-posta adresi zaten kayıtlı.', 409)); // 409 Conflict
         }
-        console.error('Kullanıcı oluşturulurken hata:', error);
-        res.status(500).json({ message: 'Sunucu hatası' });
+        // Diğer veritabanı hataları için genel hata yöneticisine devret
+        return next(dbError);
     }
-};
+});
 
-// Mevcut bir kullanıcının bilgilerini günceller
-const updateUser = async (req, res) => {
-    try {
-        // 1. ADIM: Gelen veriyi validasyon şemamızla doğrulama ve temizleme
-        const { error, value } = updateUserSchema.validate(req.body);
-        if (error) {
-            return res.status(400).json({ message: error.details[0].message });
-        }
 
-        // 2. ADIM: Güvenli veriyi ve URL parametresini al
-        const { id } = req.params;
-        const fieldsToUpdate = value;
-
-        // 3. ADIM: Dinamik ve parametreli SQL sorgusunu oluştur
-        const fields = Object.keys(fieldsToUpdate);
-        const values = Object.values(fieldsToUpdate);
-        const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-
-        const query = `UPDATE users SET ${setClause} WHERE id = $1 RETURNING *`;
-        
-        // 4. ADIM: Sorguyu veritabanında çalıştır
-        const result = await pool.query(query, [id, ...values]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
-        }
-
-        // 5. ADIM: Başarılı yanıtı, hassas bilgileri çıkararak döndür
-        const { password, ...updatedUser } = result.rows[0];
-        res.status(200).json(updatedUser);
-
-    } catch (error) {
-        console.error('Kullanıcı güncellenirken hata:', error);
-        res.status(500).json({ message: 'Sunucuda beklenmedik bir hata oluştu.' });
+/**
+ * @desc    Mevcut bir kullanıcıyı günceller
+ * @route   PATCH /api/users/:id
+ * @access  Private (Kullanıcının kendisi veya Admin olmalı)
+ */
+const updateUser = asyncHandler(async (req, res, next) => {
+    const { error, value } = updateUserSchema.validate(req.body);
+    if (error) {
+        return next(new ErrorResponse(error.details[0].message, 400));
     }
-};
 
-// Bir kullanıcıyı siler
-const deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
+    const { id } = req.params;
+    const fieldsToUpdate = value;
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
-        }
-        res.status(200).json({ message: 'Kullanıcı başarıyla silindi.' });
-    } catch (error) {
-        console.error('Kullanıcı silinirken hata:', error);
-        res.status(500).json({ message: 'Sunucu hatası' });
+    const fields = Object.keys(fieldsToUpdate);
+    const values = Object.values(fieldsToUpdate);
+    const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+
+    const query = `UPDATE users SET ${setClause} WHERE id = $1 RETURNING id, name, email, role, created_at`;
+    
+    const result = await pool.query(query, [id, ...values]);
+
+    if (result.rows.length === 0) {
+        return next(new ErrorResponse(`ID'si ${id} olan kullanıcı bulunamadı.`, 404));
     }
-};
+
+    res.status(200).json({
+        success: true,
+        data: result.rows[0]
+    });
+});
 
 
+/**
+ * @desc    Bir kullanıcıyı siler
+ * @route   DELETE /api/users/:id
+ * @access  Private (Admin olmalı)
+ */
+const deleteUser = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
+
+    if (result.rowCount === 0) {
+        return next(new ErrorResponse(`ID'si ${id} olan kullanıcı bulunamadı.`, 404));
+    }
+
+    res.status(200).json({ 
+        success: true, 
+        message: 'Kullanıcı başarıyla silindi.' 
+    });
+});
+
+
+// 3. DIŞA AKTARMA
+// ----------------------------------------------------
 module.exports = {
     getAllUsers,
     getUserById,
