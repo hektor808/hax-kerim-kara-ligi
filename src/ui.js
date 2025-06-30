@@ -231,8 +231,15 @@ export function displayHeadToHeadResults(container, matches, allSeasonsData) {
     });
 }
 
+/**
+ * Oyuncu detay modal'ını açar.
+ */
 export function openPlayerModal() {
-    document.getElementById('player-modal').classList.remove('hidden');
+    const modal = document.getElementById('player-modal');
+    modal.classList.remove('hidden');
+
+    // EKLENDİ: Modal açıldığında sayfanın en üstüne git.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 export function closePlayerModal() {
