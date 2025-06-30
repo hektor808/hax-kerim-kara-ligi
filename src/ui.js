@@ -43,7 +43,7 @@ function createStatListItem(player, team, type, seasonId) {
   listItem.dataset.playerName = player.name;
   listItem.dataset.seasonId = seasonId;
 
-  const logoSrc = team ? team.logo : DEFAULT_LOGO_PATH;
+  const logoSrc = team?.logo ?? DEFAULT_LOGO_PATH;
   const statValue = player[type] || 0;
   const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
   
@@ -76,7 +76,7 @@ export function displayTopStats(container, title, titleColor, stats, type, teams
     list.innerHTML = `<li class="text-center text-gray-400">Veri yok.</li>`;
   } else {
     stats.forEach(p => {
-      const team = teams.find(t => t.id === p.teamId && t.name === p.teamName);
+      const team = teams.find(t => t.id === p.teamId);
       list.append(createStatListItem(p, team, type, seasonId));
     });
   }
@@ -120,7 +120,6 @@ export function displayFixtures(container, teamsData, fixturesData) {
     return acc;
   }, {});
 
-  // DÜZELTME: Haftaları sayısal olarak sırala (1, 2, 3 ... 10, 11)
   Object.keys(groupedByWeek).sort((a,b) => Number(a) - Number(b)).forEach(week => {
     const weekContainer = document.createElement('div');
     weekContainer.className = 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8';
@@ -179,18 +178,18 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
         ? `<span class="font-bold text-lg sm:text-xl px-2 py-1 rounded-md bg-blue-600 text-white">${fixture.homeScore}</span><span class="font-bold text-gray-400 mx-3.25">-</span><span class="font-bold text-lg sm:text-xl px-2 py-1 rounded-md bg-blue-600 text-white">${fixture.awayScore}</span>`
         : `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Tarih yok'}</span>`;
       
-      const homeLogo = homeTeam ? homeTeam.logo : DEFAULT_LOGO_PATH;
-      const awayLogo = awayTeam ? awayTeam.logo : DEFAULT_LOGO_PATH;
+      const homeLogo = homeTeam?.logo ?? DEFAULT_LOGO_PATH;
+      const awayLogo = awayTeam?.logo ?? DEFAULT_LOGO_PATH;
       
       fixtureElement.innerHTML = `
         <div class="flex items-center gap-2 sm:gap-3 text-right justify-end w-2/5 min-w-0">
-          <span class="font-semibold text-white truncate">${homeTeam ? homeTeam.name : 'Belirlenmedi'}</span>
+          <span class="font-semibold text-white truncate">${homeTeam?.name ?? 'Belirlenmedi'}</span>
           <img src="${homeLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
         </div>
         <div class="w-[24%] text-center flex items-center justify-center">${scoreDisplay}</div>
         <div class="flex items-center gap-2 sm:gap-3 w-2/5 min-w-0">
           <img src="${awayLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" />
-          <span class="font-semibold text-white truncate">${awayTeam ? awayTeam.name : 'Belirlenmedi'}</span>
+          <span class="font-semibold text-white truncate">${awayTeam?.name ?? 'Belirlenmedi'}</span>
         </div>`;
       stageContainer.appendChild(fixtureElement);
     });
@@ -228,16 +227,17 @@ export function displaySuspendedPlayers(container, teamsData, playerStats) {
   if (suspendedPlayers.length === 0) return renderEmpty(container, 'Cezalı oyuncu yok.');
   
   suspendedPlayers.forEach(player => {
+    // DÜZELTME: Oyuncunun takımı olmasa bile göster.
     const team = teamsData.find(t => t.id === player.teamId);
-    if (!team) return;
+    
     const card = document.createElement('div');
     card.className = 'flex flex-col bg-red-900/30 border border-red-700 p-4 rounded-xl mb-3 shadow max-w-2xl mx-auto';
     card.innerHTML = `
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-4">
-          <img src="${team.logo || DEFAULT_LOGO_PATH}" alt="${team.name}" class="w-10 h-10 object-contain rounded" />
+          <img src="${team?.logo ?? DEFAULT_LOGO_PATH}" alt="${team?.name ?? 'Takımsız'}" class="w-10 h-10 object-contain rounded" />
           <div>
-            <p class="text-white font-bold">${player.name} <span class="text-gray-400">(${team.name})</span></p>
+            <p class="text-white font-bold">${player.name} <span class="text-gray-400">(${team?.name ?? 'Takımsız'})</span></p>
             <p class="text-white text-lg">${player.redCards > 0 ? '🟥 ' + player.redCards : '🟨 ' + player.yellowCards}</p>
           </div>
         </div>
@@ -296,15 +296,15 @@ export function populatePlayerModal(player, team) {
   const modalContent = document.getElementById('player-modal-content');
   if (!modalContent) return;
   
-  const logoSrc = team ? team.logo : DEFAULT_LOGO_PATH;
+  const logoSrc = team?.logo ?? DEFAULT_LOGO_PATH;
   modalContent.innerHTML = `
     <div class="p-6">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4">
-                <img src="${logoSrc}" alt="${team?.name || 'Takımsız'}" class="w-16 h-16 object-contain rounded-full border-2 border-gray-600">
+                <img src="${logoSrc}" alt="${team?.name ?? 'Takımsız'}" class="w-16 h-16 object-contain rounded-full border-2 border-gray-600">
                 <div>
                     <h3 class="text-2xl font-bold text-white">${player.name}</h3>
-                    <p class="text-gray-400">${team?.name || 'Takımsız'}</p>
+                    <p class="text-gray-400">${team?.name ?? 'Takımsız'}</p>
                 </div>
             </div>
             <button id="modal-close-button" class="text-3xl text-gray-500 hover:text-white transition-colors">&times;</button>
