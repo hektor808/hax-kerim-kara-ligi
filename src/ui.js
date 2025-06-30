@@ -1,5 +1,13 @@
 import { calculateStandings } from './utils.js';
 
+// YENİ: Tekrarlanan sabit değerler merkezileştirildi.
+const DEFAULT_LOGO_PATH = 'img/default-logo.png';
+
+// YENİ: Veri beklenirken konteyner içinde bir yükleme göstergesi gösterir.
+export function showLoading(container) {
+    container.innerHTML = `<p class="text-center text-gray-400 p-8 animate-pulse">Yükleniyor...</p>`;
+}
+
 function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
 }
@@ -15,23 +23,13 @@ function createTeamCard(team) {
     return card;
 }
 
-/**
- * DEĞİŞTİRİLDİ: Oyuncu listesi elemanını oluştururken tıklama olayında kullanılmak üzere
- * sezon ID'sini de bir data attribute olarak DOM'a gömer.
- * @param {object} player Oyuncu objesi
- * @param {object} team Takım objesi
- * @param {string} type İstatistik türü ('goals', 'assists', 'cleanSheets')
- * @param {string} seasonId Sezon ID'si
- * @returns {HTMLLIElement}
- */
 function createStatListItem(player, team, type, seasonId) {
     const listItem = document.createElement('li');
     listItem.className = 'flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer';
-    // Tıklama olayında doğru bağlamı yakalamak için gerekli bilgileri DOM'a ekliyoruz.
     listItem.dataset.playerName = player.name;
-    listItem.dataset.seasonId = seasonId; // <-- EN KRİTİK DEĞİŞİKLİK
+    listItem.dataset.seasonId = seasonId;
 
-    const logoSrc = team ? team.logo : '/img/default-logo.png';
+    const logoSrc = team ? team.logo : DEFAULT_LOGO_PATH; // DEĞİŞTİRİLDİ
     const statValue = player[type] || 0;
     const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
     
@@ -54,18 +52,6 @@ export function displayTeams(container, teamsData) {
     });
 }
 
-/**
- * DEĞİŞTİRİLDİ: Bu fonksiyon artık daha modüler. Eskiden üç listeyi birden yönetirken,
- * şimdi tek bir istatistik listesini (örn: sadece Gol Krallığı) render etmekten sorumlu.
- * Bu değişiklik, main.js'deki updateKings fonksiyonunun yapısını basitleştiriyor.
- * @param {HTMLElement} container Listenin render edileceği container
- * @param {string} title Liste başlığı
- * @param {string} titleColor Başlık rengi için CSS class'ı
- * @param {Array} stats Render edilecek oyuncu istatistikleri listesi
- * @param {string} type İstatistik türü
- * @param {Array} teams Tüm takımların listesi
- * @param {string} seasonId Sezon ID'si
- */
 export function displayTopStats(container, title, titleColor, stats, type, teams, seasonId) {
     if (!teams || !stats) { return renderError(container); }
     
@@ -78,7 +64,6 @@ export function displayTopStats(container, title, titleColor, stats, type, teams
     } else {
         stats.forEach(p => {
             const team = teams.find(t => t.id === p.teamId && t.name === p.teamName);
-            // Her bir oyuncu için sezon bilgisiyle birlikte liste elemanı oluşturulur.
             const listItemElement = createStatListItem(p, team, type, seasonId); 
             list.append(listItemElement);
         });
@@ -163,8 +148,8 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
             } else {
                 scoreDisplay = `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Tarih yok'}</span>`;
             }
-            const homeLogo = homeTeam ? homeTeam.logo : 'img/default-logo.png';
-            const awayLogo = awayTeam ? awayTeam.logo : 'img/default-logo.png';
+            const homeLogo = homeTeam ? homeTeam.logo : DEFAULT_LOGO_PATH; // DEĞİŞTİRİLDİ
+            const awayLogo = awayTeam ? awayTeam.logo : DEFAULT_LOGO_PATH; // DEĞİŞTİRİLDİ
             fixtureElement.innerHTML = `<div class="flex items-center gap-2 sm:gap-3 text-right justify-end w-2/5 min-w-0"><span class="font-semibold text-white truncate">${homeTeam ? homeTeam.name : 'Belirlenmedi'}</span><img src="${homeLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" /></div><div class="w-[24%] text-center flex items-center justify-center">${scoreDisplay}</div><div class="flex items-center gap-2 sm:gap-3 w-2/5 min-w-0"><img src="${awayLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" /><span class="font-semibold text-white truncate">${awayTeam ? awayTeam.name : 'Belirlenmedi'}</span></div>`;
             stageContainer.appendChild(fixtureElement);
         });
@@ -231,7 +216,7 @@ export function closePlayerModal() {
 
 export function populatePlayerModal(player, team) {
     const modalContent = document.getElementById('player-modal-content');
-    const logoSrc = team ? team.logo : 'img/default-logo.png';
+    const logoSrc = team ? team.logo : DEFAULT_LOGO_PATH; // DEĞİŞTİRİLDİ
     modalContent.innerHTML = `
         <div class="p-6">
             <div class="flex items-center justify-between mb-4">
