@@ -29,12 +29,32 @@ function createTeamCard(team) {
     return card;
 }
 
-// --- ANA GÖSTERİM FONKSİYONLARI ---
+function createStatListItem(player, team, type) {
+    const listItem = document.createElement('li');
+    listItem.className = 'flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer';
+    listItem.dataset.playerName = player.name;
+    
+    const logoSrc = team ? team.logo : '/img/default-logo.png';
+    const statValue = player[type];
+    const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
 
+    listItem.innerHTML = `
+        <div class="flex items-center gap-3 pointer-events-none">
+            <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
+            <span class="font-semibold text-white">${player.name}</span>
+        </div>
+        <span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>
+    `;
+    return listItem;
+}
+
+
+// --- ANA GÖSTERİM FONKSİYONLARI ---
 export function displayTeams(container, teamsData) {
     if (!teamsData) return renderError(container);
     container.innerHTML = '';
     if(teamsData.length === 0) return renderEmpty(container, "Arama kriterlerine uygun takım bulunamadı.");
+
     teamsData.forEach(team => {
         const teamCardElement = createTeamCard(team);
         container.append(teamCardElement);
@@ -49,32 +69,34 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
         return;
     }
     
-    const renderStatList = (stats, type) => {
+    const renderStats = (container, title, titleColor, stats, type) => {
+        container.innerHTML = `<h3 class="text-lg font-bold text-center ${titleColor} mb-4 border-b border-gray-600 pb-2">${title}</h3>`;
+        const list = document.createElement('ul');
+        list.className = 'space-y-3';
+
         if (stats.length === 0) {
-            return '<li class="text-center text-gray-400">Veri yok.</li>';
+            const emptyItem = document.createElement('li');
+            emptyItem.className = 'text-center text-gray-400';
+            emptyItem.textContent = 'Veri yok.';
+            list.append(emptyItem);
+        } else {
+            stats.forEach(p => {
+                const team = teams.find(t => t.id === p.teamId);
+                const listItemElement = createStatListItem(p, team, type);
+                list.append(listItemElement);
+            });
         }
-        return stats.map(p => {
-            const team = teams.find(t => t.id === p.teamId);
-            const logoSrc = team ? team.logo : '/img/default-logo.png';
-            const statValue = p[type];
-            const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
-            return `
-            <li class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
-                    <span class="text-white">${p.name}</span>
-                </div>
-                <span class="font-bold ${valueColorClass}">${statValue}</span>
-            </li>`;
-        }).join('');
+        container.append(list);
     };
 
     const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
-    scorersContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-yellow-400 mb-4 border-b border-yellow-500 pb-2">Gol Krallığı</h3><ul class="space-y-3">${renderStatList(topScorers, 'goals')}</ul>`;
+    renderStats(scorersContainer, 'Gol Krallığı', 'text-yellow-400', topScorers, 'goals');
+
     const topAssists = playerStats.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
-    assistsContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-green-400 mb-4 border-b border-green-500 pb-2">Asist Krallığı</h3><ul class="space-y-3">${renderStatList(topAssists, 'assists')}</ul>`;
+    renderStats(assistsContainer, 'Asist Krallığı', 'text-green-400', topAssists, 'assists');
+
     const topKeepers = playerStats.filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
-    cleanSheetsContainer.innerHTML = `<h3 class="text-lg font-bold text-center text-cyan-400 mb-4 border-b border-cyan-500 pb-2">Clean Sheet</h3><ul class="space-y-3">${renderStatList(topKeepers, 'cleanSheets')}</ul>`;
+    renderStats(cleanSheetsContainer, 'Clean Sheet', 'text-cyan-400', topKeepers, 'cleanSheets');
 }
 
 export function displayStandings(container, teams, fixtures) {
@@ -83,23 +105,7 @@ export function displayStandings(container, teams, fixtures) {
     container.innerHTML = '';
     if (standings.length === 0) return renderEmpty(container, "Bu sezon için puan durumu verisi bulunamadı.");
     standings.forEach((team, index) => {
-        const row = `
-            <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-                <td class="px-6 py-4 font-medium whitespace-nowrap ${index < 3 ? 'text-green-400' : ''}">${index + 1}</td>
-                <td class="px-6 py-4 flex items-center gap-3">
-                    <img src="${team.logo}" alt="${team.name} logo" class="w-10 h-10 rounded object-contain" />
-                    <span class="font-semibold text-white">${team.name}</span>
-                </td>
-                <td class="px-6 py-4 text-center">${team.played}</td>
-                <td class="px-6 py-4 text-center text-green-400">${team.win}</td>
-                <td class="px-6 py-4 text-center text-yellow-400">${team.draw}</td>
-                <td class="px-6 py-4 text-center text-red-400">${team.loss}</td>
-                <td class="px-6 py-4 text-center">${team.goalsFor}</td>
-                <td class="px-6 py-4 text-center">${team.goalsAgainst}</td>
-                <td class="px-6 py-4 text-center">${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}</td>
-                <td class="px-6 py-4 text-center font-bold text-white">${team.points}</td>
-            </tr>
-        `;
+        const row = `<tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50"><td class="px-6 py-4 font-medium whitespace-nowrap ${index < 3 ? 'text-green-400' : ''}">${index + 1}</td><td class="px-6 py-4 flex items-center gap-3"><img src="${team.logo}" alt="${team.name} logo" class="w-10 h-10 rounded object-contain" /><span class="font-semibold text-white">${team.name}</span></td><td class="px-6 py-4 text-center">${team.played}</td><td class="px-6 py-4 text-center text-green-400">${team.win}</td><td class="px-6 py-4 text-center text-yellow-400">${team.draw}</td><td class="px-6 py-4 text-center text-red-400">${team.loss}</td><td class="px-6 py-4 text-center">${team.goalsFor}</td><td class="px-6 py-4 text-center">${team.goalsAgainst}</td><td class="px-6 py-4 text-center">${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}</td><td class="px-6 py-4 text-center font-bold text-white">${team.points}</td></tr>`;
         container.innerHTML += row;
     });
 }
@@ -115,7 +121,7 @@ export function displayFixtures(container, teamsData, fixturesData) {
     }, {});
     for (const week in groupedByWeek) {
         const weekContainer = document.createElement('div');
-        weekContainer.className = 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700'; 
+        weekContainer.className = 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8';
         const weekTitle = document.createElement('h3');
         weekTitle.className = 'text-lg sm:text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2';
         weekTitle.textContent = `${week}. Hafta Maçları`;
@@ -207,45 +213,55 @@ export function displaySuspendedPlayers(container, teamsData, playerStats) {
 
 export function displayHeadToHeadResults(container, matches, allSeasonsData) {
     container.innerHTML = '';
-
-    if (matches.length === 0) {
-        return renderEmpty(container, "Bu iki takım arasında oynanmış bir maç bulunamadı.");
-    }
-
+    if (matches.length === 0) return renderEmpty(container, "Bu iki takım arasında oynanmış bir maç bulunamadı.");
     matches.sort((a, b) => {
         if (a.seasonId !== b.seasonId) return a.seasonId - b.seasonId;
         return a.week - b.week;
     });
-
     matches.forEach(match => {
         const seasonTeams = allSeasonsData[match.seasonId].teams;
         const homeTeam = seasonTeams.find(t => t.id === match.homeTeamId);
         const awayTeam = seasonTeams.find(t => t.id === match.awayTeamId);
-
         if (!homeTeam || !awayTeam) return;
-
         const matchElement = document.createElement('div');
         matchElement.className = 'flex items-center justify-between p-3 rounded-md bg-gray-700/50';
-
-        const scoreDisplay = (match.status === 'Oynandı') ? `
-            <span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.homeScore}</span>
-            <span class="font-bold text-gray-400 mx-3">-</span>
-            <span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.awayScore}</span>
-        ` : `<span class="text-xs text-gray-400">${match.date || 'Belirsiz'}</span>`;
-
-        matchElement.innerHTML = `
-            <div class="flex items-center gap-3 text-right justify-end w-2/5">
-                <span class="font-semibold text-white truncate">${homeTeam.name}</span>
-                <img src="${homeTeam.logo}" alt="${homeTeam.name} logo" class="w-8 h-8 object-contain rounded" />
-            </div>
-            <div class="w-1/5 text-center flex items-center justify-center min-w-max">
-                ${scoreDisplay}
-            </div>
-            <div class="flex items-center gap-3 w-2/5">
-                <img src="${awayTeam.logo}" alt="${awayTeam.name} logo" class="w-8 h-8 object-contain rounded" />
-                <span class="font-semibold text-white truncate">${awayTeam.name}</span>
-            </div>
-        `;
+        const scoreDisplay = (match.status === 'Oynandı') ? `<span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.homeScore}</span><span class="font-bold text-gray-400 mx-3">-</span><span class="font-bold text-lg px-2 py-1.5 rounded-md bg-blue-600 text-white">${match.awayScore}</span>` : `<span class="text-xs text-gray-400">${match.date || 'Belirsiz'}</span>`;
+        matchElement.innerHTML = `<div class="flex items-center gap-3 text-right justify-end w-2/5"><span class="font-semibold text-white truncate">${homeTeam.name}</span><img src="${homeTeam.logo}" alt="${homeTeam.name} logo" class="w-8 h-8 object-contain rounded" /></div><div class="w-1/5 text-center flex items-center justify-center min-w-max">${scoreDisplay}</div><div class="flex items-center gap-3 w-2/5"><img src="${awayTeam.logo}" alt="${awayTeam.name} logo" class="w-8 h-8 object-contain rounded" /><span class="font-semibold text-white truncate">${awayTeam.name}</span></div>`;
         container.append(matchElement);
     });
+}
+
+export function openPlayerModal() {
+    document.getElementById('player-modal').classList.remove('hidden');
+}
+
+export function closePlayerModal() {
+    document.getElementById('player-modal').classList.add('hidden');
+}
+
+export function populatePlayerModal(player, team) {
+    const modalContent = document.getElementById('player-modal-content');
+    const logoSrc = team ? team.logo : '/img/default-logo.png';
+    modalContent.innerHTML = `
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <img src="${logoSrc}" alt="${team?.name || 'Takımsız'}" class="w-16 h-16 object-contain rounded-full border-2 border-gray-600">
+                    <div>
+                        <h3 class="text-2xl font-bold text-white">${player.name}</h3>
+                        <p class="text-gray-400">${team?.name || 'Takımsız'}</p>
+                    </div>
+                </div>
+                <button id="modal-close-button" class="text-3xl text-gray-500 hover:text-white transition-colors">&times;</button>
+            </div>
+            <div class="bg-gray-900/50 p-4 rounded-lg">
+                <h4 class="font-semibold text-lg text-white mb-2">Sezon İstatistikleri</h4>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div><p class="text-sm text-gray-400">Gol</p><p class="text-2xl font-bold text-blue-400">${player.goals || 0}</p></div>
+                    <div><p class="text-sm text-gray-400">Asist</p><p class="text-2xl font-bold text-green-400">${player.assists || 0}</p></div>
+                    <div><p class="text-sm text-gray-400">Clean Sheet</p><p class="text-2xl font-bold text-cyan-400">${player.cleanSheets || 0}</p></div>
+                </div>
+            </div>
+        </div>
+    `;
 }

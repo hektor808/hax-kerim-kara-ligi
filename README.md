@@ -1,8 +1,6 @@
 # HAX Kerim Kara League - Web Platformu
 
-![HAX Kerim Kara League](https://cdn.discordapp.com/icons/1178002095346028645/944403461b0f45df2577e0ceedc1f1a0.png?size=128)
-
-Bu proje, HAX Kerim Kara Haxball Ligi'nin resmi puan durumu, fikstür, istatistikler ve diğer tüm bilgilerini barındıran modern bir web uygulamasıdır.
+![HAX Kerim Kara League](public/img/logo.png) Bu proje, HAX Kerim Kara Haxball Ligi'nin resmi puan durumu, fikstür, istatistikler ve diğer tüm bilgilerini barındıran modern bir web uygulamasıdır.
 
 **Canlı Demo:** [https://hektor808.github.io/hax-kerim-kara-ligi/](https://hektor808.github.io/hax-kerim-kara-ligi/)
 
@@ -10,11 +8,13 @@ Bu proje, HAX Kerim Kara Haxball Ligi'nin resmi puan durumu, fikstür, istatisti
 
 ## ✨ Özellikler
 
-* Dinamik olarak güncellenen sezonluk **Puan Durumu**.
-* Geçmiş ve gelecek maçları gösteren **Fikstür**.
+* Tüm sezonlar için dinamik olarak güncellenen **Puan Durumu**.
+* Sezon bazında geçmiş ve gelecek maçları gösteren **Fikstür**.
 * Gol, asist ve clean sheet krallarını listeleyen **Krallıklar**.
-* Güncel takım kadroları ve kaptan bilgileri.
+* Güncel takım kadroları, kaptanları ve bütçeleri.
 * Eurocup turnuvası fikstürü ve sonuçları.
+* İki takım arasında tüm sezonları kapsayan **İkili Rekabet (Head-to-Head)** istatistikleri.
+* Takımlar sayfasında canlı arama özelliği.
 * Tamamen mobil uyumlu ve modern bir arayüz.
 
 ---
