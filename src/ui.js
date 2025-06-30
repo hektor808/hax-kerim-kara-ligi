@@ -1,6 +1,5 @@
 import { calculateStandings } from './utils.js';
 
-// --- Arayüz Yardımcıları ---
 function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
 }
@@ -9,23 +8,10 @@ function renderEmpty(container, message) {
     container.innerHTML = `<p class="text-center text-gray-400 p-4">${message}</p>`;
 }
 
-// --- BİLEŞEN OLUŞTURUCU FONKSİYONLAR ---
 function createTeamCard(team) {
     const card = document.createElement('div');
     card.className = 'bg-gray-800 rounded-xl shadow-lg p-6 text-center border border-gray-700 transition-all duration-300 hover:border-blue-500 hover:shadow-blue-500/20 transform hover:-translate-y-1';
-    card.innerHTML = `
-        <div class="flex justify-center mb-4">
-            <img src="${team.logo}" alt="${team.name} logo" class="w-16 h-16 object-contain" />
-        </div>
-        <h3 class="text-xl font-bold text-white">${team.name}</h3>
-        <p class="text-gray-400 text-sm mt-1">Kaptan: ${team.captain}</p>
-        <div class="mt-4 pt-4 border-t border-gray-700">
-            <h4 class="text-sm font-semibold text-gray-300 mb-2">Oyuncular</h4>
-            <div class="flex flex-wrap justify-center gap-2">
-                ${(team.players || []).map(player => `<span class="bg-gray-700 text-gray-200 text-xs font-medium px-2.5 py-1 rounded-full">${player}</span>`).join('')}
-            </div>
-        </div>
-    `;
+    card.innerHTML = `<div class="flex justify-center mb-4"><img src="${team.logo}" alt="${team.name} logo" class="w-16 h-16 object-contain" /></div><h3 class="text-xl font-bold text-white">${team.name}</h3><p class="text-gray-400 text-sm mt-1">Kaptan: ${team.captain}</p><div class="mt-4 pt-4 border-t border-gray-700"><h4 class="text-sm font-semibold text-gray-300 mb-2">Oyuncular</h4><div class="flex flex-wrap justify-center gap-2">${(team.players || []).map(player => `<span class="bg-gray-700 text-gray-200 text-xs font-medium px-2.5 py-1 rounded-full">${player}</span>`).join('')}</div></div>`;
     return card;
 }
 
@@ -33,28 +19,17 @@ function createStatListItem(player, team, type) {
     const listItem = document.createElement('li');
     listItem.className = 'flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer';
     listItem.dataset.playerName = player.name;
-    
-    const logoSrc = team ? team.logo : '/img/default-logo.png';
-    const statValue = player[type];
+    const logoSrc = team ? team.logo : 'img/default-logo.png';
+    const statValue = player[type] || 0;
     const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
-
-    listItem.innerHTML = `
-        <div class="flex items-center gap-3 pointer-events-none">
-            <img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" />
-            <span class="font-semibold text-white">${player.name}</span>
-        </div>
-        <span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>
-    `;
+    listItem.innerHTML = `<div class="flex items-center gap-3 pointer-events-none"><img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" /><span class="font-semibold text-white">${player.name}</span></div><span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>`;
     return listItem;
 }
 
-
-// --- ANA GÖSTERİM FONKSİYONLARI ---
 export function displayTeams(container, teamsData) {
     if (!teamsData) return renderError(container);
     container.innerHTML = '';
     if(teamsData.length === 0) return renderEmpty(container, "Arama kriterlerine uygun takım bulunamadı.");
-
     teamsData.forEach(team => {
         const teamCardElement = createTeamCard(team);
         container.append(teamCardElement);
@@ -62,18 +37,11 @@ export function displayTeams(container, teamsData) {
 }
 
 export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsContainer, teams, playerStats) {
-     if (!teams || !playerStats) {
-        renderError(scorersContainer);
-        renderError(assistsContainer);
-        renderError(cleanSheetsContainer);
-        return;
-    }
-    
+     if (!teams || !playerStats) { renderError(scorersContainer); renderError(assistsContainer); renderError(cleanSheetsContainer); return; }
     const renderStats = (container, title, titleColor, stats, type) => {
         container.innerHTML = `<h3 class="text-lg font-bold text-center ${titleColor} mb-4 border-b border-gray-600 pb-2">${title}</h3>`;
         const list = document.createElement('ul');
         list.className = 'space-y-3';
-
         if (stats.length === 0) {
             const emptyItem = document.createElement('li');
             emptyItem.className = 'text-center text-gray-400';
@@ -81,20 +49,17 @@ export function displayTopStats(scorersContainer, assistsContainer, cleanSheetsC
             list.append(emptyItem);
         } else {
             stats.forEach(p => {
-                const team = teams.find(t => t.id === p.teamId);
+                const team = teams.find(t => t.id === p.teamId && t.name === p.teamName);
                 const listItemElement = createStatListItem(p, team, type);
                 list.append(listItemElement);
             });
         }
         container.append(list);
     };
-
     const topScorers = playerStats.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
     renderStats(scorersContainer, 'Gol Krallığı', 'text-yellow-400', topScorers, 'goals');
-
     const topAssists = playerStats.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
     renderStats(assistsContainer, 'Asist Krallığı', 'text-green-400', topAssists, 'assists');
-
     const topKeepers = playerStats.filter(p => p.cleanSheets > 0).sort((a, b) => b.cleanSheets - a.cleanSheets);
     renderStats(cleanSheetsContainer, 'Clean Sheet', 'text-cyan-400', topKeepers, 'cleanSheets');
 }
@@ -175,8 +140,8 @@ export function displayEurocupFixtures(container, teamsData, fixturesData) {
             } else {
                 scoreDisplay = `<span class="text-xs sm:text-sm text-gray-400">${fixture.date || 'Tarih yok'}</span>`;
             }
-            const homeLogo = homeTeam ? homeTeam.logo : '/img/default-logo.png';
-            const awayLogo = awayTeam ? awayTeam.logo : '/img/default-logo.png';
+            const homeLogo = homeTeam ? homeTeam.logo : 'img/default-logo.png';
+            const awayLogo = awayTeam ? awayTeam.logo : 'img/default-logo.png';
             fixtureElement.innerHTML = `<div class="flex items-center gap-2 sm:gap-3 text-right justify-end w-2/5 min-w-0"><span class="font-semibold text-white truncate">${homeTeam ? homeTeam.name : 'Belirlenmedi'}</span><img src="${homeLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" /></div><div class="w-[24%] text-center flex items-center justify-center">${scoreDisplay}</div><div class="flex items-center gap-2 sm:gap-3 w-2/5 min-w-0"><img src="${awayLogo}" class="w-6 h-6 sm:w-8 sm:h-8 object-contain rounded" /><span class="font-semibold text-white truncate">${awayTeam ? awayTeam.name : 'Belirlenmedi'}</span></div>`;
             stageContainer.appendChild(fixtureElement);
         });
@@ -231,24 +196,19 @@ export function displayHeadToHeadResults(container, matches, allSeasonsData) {
     });
 }
 
-/**
- * Oyuncu detay modal'ını açar.
- */
 export function openPlayerModal() {
-    const modal = document.getElementById('player-modal');
-    modal.classList.remove('hidden');
-
-    // EKLENDİ: Modal açıldığında sayfanın en üstüne git.
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('player-modal').classList.remove('hidden');
+    document.body.classList.add('modal-open');
 }
 
 export function closePlayerModal() {
     document.getElementById('player-modal').classList.add('hidden');
+    document.body.classList.remove('modal-open');
 }
 
 export function populatePlayerModal(player, team) {
     const modalContent = document.getElementById('player-modal-content');
-    const logoSrc = team ? team.logo : '/img/default-logo.png';
+    const logoSrc = team ? team.logo : 'img/default-logo.png';
     modalContent.innerHTML = `
         <div class="p-6">
             <div class="flex items-center justify-between mb-4">
@@ -262,7 +222,7 @@ export function populatePlayerModal(player, team) {
                 <button id="modal-close-button" class="text-3xl text-gray-500 hover:text-white transition-colors">&times;</button>
             </div>
             <div class="bg-gray-900/50 p-4 rounded-lg">
-                <h4 class="font-semibold text-lg text-white mb-2">Sezon İstatistikleri</h4>
+                <h4 class="font-semibold text-lg text-white mb-2">İstatistikler</h4>
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div><p class="text-sm text-gray-400">Gol</p><p class="text-2xl font-bold text-blue-400">${player.goals || 0}</p></div>
                     <div><p class="text-sm text-gray-400">Asist</p><p class="text-2xl font-bold text-green-400">${player.assists || 0}</p></div>
