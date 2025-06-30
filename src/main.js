@@ -71,13 +71,17 @@ function getUrlParams() {
   return { season: params.get('season'), cup: params.get('cup') };
 }
 
-// DÜZELTME: Bu fonksiyon artık URL'yi daha akıllı ve hatasız yönetiyor.
 function updateUrl(hash, paramsToSet = {}, replaceParams = false) {
     const url = new URL(window.location);
     const params = replaceParams ? new URLSearchParams() : new URLSearchParams(url.search);
 
     Object.keys(paramsToSet).forEach(key => {
-        paramsToSet[key] ? params.set(key, paramsToSet[key]) : params.delete(key);
+        const value = paramsToSet[key];
+        if (value) {
+            params.set(key, value);
+        } else {
+            params.delete(key); // Değer null veya undefined ise parametreyi sil
+        }
     });
     
     url.search = params.toString();
@@ -113,10 +117,9 @@ const getCachedEurocupData = (cupId) => getCachedData(AppState.eurocupCache, cup
 
 // --- ARAYÜZ GÜNCELLEME FONKSİYONLARI ---
 
-// DÜZELTME: Fonksiyonlar artık gidecekleri hash'i parametre olarak alıyor.
 async function updateStandings(targetId) {
   const seasonId = DOM.standings.select.value;
-  updateUrl(targetId, { season: seasonId }, true);
+  updateUrl(targetId, { season: seasonId }, true); 
   showLoading(DOM.standings.container);
   try {
     const { teams, fixtures } = await getCachedSeasonData(seasonId);
@@ -202,7 +205,7 @@ function syncH2hDropdowns(sourceSelect, targetSelect) {
 }
 
 async function updateHeadToHead(targetId) {
-    updateUrl(targetId); // Sadece hash'i güncelle, parametreleri koru
+    updateUrl(targetId);
     const team1Name = DOM.h2h.team1Select.value;
     const team2Name = DOM.h2h.team2Select.value;
     if (!team1Name || !team2Name) {
@@ -221,6 +224,17 @@ async function updateHeadToHead(targetId) {
     }
 }
 
+// YENİ: Takımlar sayfası için özel, basit bir güncelleme fonksiyonu
+async function updateTeams(targetId) {
+    updateUrl(targetId, { season: null, cup: null }, false); // Parametreleri temizle
+    try {
+        const seasonData = await getCachedSeasonData('3'); // Takımlar her zaman son sezonu gösterir
+        displayTeams(DOM.teams.container, seasonData.teams);
+    } catch(e) {
+        renderError(DOM.teams.container, "Takımlar yüklenemedi.");
+    }
+}
+
 
 // --- NAVİGASYON VE SAYFA YÖNETİMİ ---
 
@@ -231,7 +245,7 @@ function showSection(id) {
     DOM.navigation.mobileMenu.classList.add('hidden');
   }
 
-  // DÜZELTME: Gidilecek hedef ID'yi ilgili fonksiyona iletiyoruz.
+  // DÜZELTME: Statik sayfalar artık kendi URL'lerini yönetiyor ve parametreleri temizliyor.
   switch (id) {
     case 'puan': updateStandings(id); break;
     case 'fikstur': updateFixtures(id); break;
@@ -241,6 +255,13 @@ function showSection(id) {
       updateDynamicSeasonSections(id); break;
     case 'eurocup': updateEurocup(id); break;
     case 'h2h': updateHeadToHead(id); break;
+    case 'takimlar': updateTeams(id); break; // Özel fonksiyonunu çağırır
+    case 'anasayfa':
+    case 'kurallar':
+    case 'muze':
+      // Diğer statik sayfalar sadece URL'yi günceller ve parametreleri temizler
+      updateUrl(id, { season: null, cup: null }, false);
+      break;
   }
 }
 
@@ -264,14 +285,10 @@ function handlePageLoadOrPopState() {
 
 async function initializeApp() {
   console.log('Uygulama başlatıldı: URL ve Yenileme hataları giderildi.');
-
+  
+  // H2H için verileri arka planda önbelleğe al
   try {
-    const teamDataPromise = getCachedSeasonData('3');
     const h2hDataPromise = Promise.all(['1', '2', '3'].map(id => getCachedSeasonData(id)));
-
-    const defaultTeamData = await teamDataPromise;
-    displayTeams(DOM.teams.container, defaultTeamData.teams);
-
     const h2hSeasons = await h2hDataPromise;
     const allTeams = h2hSeasons.flatMap(s => s.teams);
     const uniqueTeams = Array.from(new Map(allTeams.map(team => [team.name, team])).values()).sort((a,b) => a.name.localeCompare(b.name));
@@ -288,15 +305,14 @@ async function initializeApp() {
     populateTeamSelects(DOM.h2h.team1Select, uniqueTeams, '1. Takımı Seçin');
     populateTeamSelects(DOM.h2h.team2Select, uniqueTeams, '2. Takımı Seçin');
   } catch (error) {
-    console.error('Başlangıç verileri yüklenirken hata:', error);
-    renderError(DOM.teams.container, "Takımlar yüklenemedi.");
+    console.error('H2H için başlangıç verileri yüklenirken hata:', error);
   }
   
   // OLAY DİNLEYİCİLERİ
   DOM.standings.select.addEventListener('change', () => showSection('puan'));
   DOM.fixtures.select.addEventListener('change', () => showSection('fikstur'));
   DOM.eurocup.select.addEventListener('change', () => showSection('eurocup'));
-  DOM.kings.select.addEventListener('change', () => showSection(window.location.hash.substring(1).split('?')[0]));
+  DOM.kings.select.addEventListener('change', () => showSection(window.location.hash.substring(1).split('?')[0] || 'kralliklar'));
   
   DOM.kings.container.addEventListener('click', handlePlayerClick);
   DOM.modal.element.addEventListener('click', (e) => { if (e.target.id === 'player-modal') closePlayerModal(); });
