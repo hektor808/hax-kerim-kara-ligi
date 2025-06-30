@@ -19,7 +19,7 @@ function createStatListItem(player, team, type) {
     const listItem = document.createElement('li');
     listItem.className = 'flex items-center justify-between p-2 rounded-md hover:bg-gray-700 cursor-pointer';
     listItem.dataset.playerName = player.name;
-    const logoSrc = team ? team.logo : 'img/default-logo.png';
+    const logoSrc = team ? team.logo : '/img/default-logo.png';
     const statValue = player[type] || 0;
     const valueColorClass = type === 'goals' ? 'text-blue-400' : type === 'assists' ? 'text-green-400' : 'text-cyan-400';
     listItem.innerHTML = `<div class="flex items-center gap-3 pointer-events-none"><img src="${logoSrc}" alt="Team Logo" class="w-6 h-6 object-contain" /><span class="font-semibold text-white">${player.name}</span></div><span class="font-bold ${valueColorClass} pointer-events-none">${statValue}</span>`;
