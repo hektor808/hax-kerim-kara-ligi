@@ -72,25 +72,61 @@ export function findMatchesByTeamNames(team1Name, team2Name, allSeasonsData) {
 
     const allMatches = [];
 
-    // Her sezonu ayrı ayrı geziyoruz
     for (const seasonId in allSeasonsData) {
         const season = allSeasonsData[seasonId];
         const teamsInSeason = season.teams;
         const fixturesInSeason = season.fixtures;
 
-        // O sezondaki takım isimlerinden ID'leri buluyoruz
         const team1 = teamsInSeason.find(t => t.name === team1Name);
         const team2 = teamsInSeason.find(t => t.name === team2Name);
 
-        // Eğer iki takım da o sezonda mevcutsa, aralarındaki maçları arıyoruz
         if (team1 && team2) {
             const matches = fixturesInSeason.filter(match =>
                 (match.homeTeamId === team1.id && match.awayTeamId === team2.id) ||
                 (match.homeTeamId === team2.id && match.awayTeamId === team1.id)
             );
-            // Bulunan maçların yanına sezon bilgisini de ekleyip ana listeye ekliyoruz
-            allMatches.push(...matches.map(m => ({ ...m, seasonId })));
+            allMatches.push(...matches.map(m => ({ ...m, seasonId, team1Id: team1.id, team2Id: team2.id })));
         }
     }
     return allMatches;
+}
+
+/**
+ * İki takım arasındaki maç listesine göre rekabet istatistiklerini hesaplar.
+ * @param {Array} matches - İki takım arasındaki maçların listesi.
+ * @param {string} team1Name - Birinci takımın adı.
+ * @param {object} allSeasonsData - Tüm sezon verileri.
+ * @returns {object} - Rekabet istatistikleri { team1Wins, team2Wins, draws }.
+ */
+export function calculateHeadToHeadStats(matches, team1Name, allSeasonsData) {
+    const stats = {
+        team1Wins: 0,
+        team2Wins: 0,
+        draws: 0,
+    };
+
+    matches.forEach(match => {
+        if (match.status !== 'Oynandı') return;
+        
+        const seasonTeams = allSeasonsData[match.seasonId].teams;
+        const homeTeam = seasonTeams.find(t => t.id === match.homeTeamId);
+        
+        if (match.homeScore > match.awayScore) {
+            if (homeTeam.name === team1Name) {
+                stats.team1Wins++;
+            } else {
+                stats.team2Wins++;
+            }
+        } else if (match.homeScore < match.awayScore) {
+            if (homeTeam.name === team1Name) {
+                stats.team2Wins++;
+            } else {
+                stats.team1Wins++;
+            }
+        } else {
+            stats.draws++;
+        }
+    });
+
+    return stats;
 }
