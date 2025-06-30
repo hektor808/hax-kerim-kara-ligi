@@ -2,32 +2,18 @@ import { calculateStandings } from './utils.js';
 
 const DEFAULT_LOGO_PATH = 'img/default-logo.png';
 
-/**
- * Veri beklenirken konteyner içinde bir yükleme göstergesi gösterir.
- * @param {HTMLElement} container Yükleme göstergesinin gösterileceği element.
- */
 export function showLoading(container) {
   if (container) {
     container.innerHTML = `<p class="text-center text-gray-400 p-8 animate-pulse">Yükleniyor...</p>`;
   }
 }
 
-/**
- * Bir hata oluştuğunda kullanıcıya hata mesajı gösterir.
- * @param {HTMLElement} container Hata mesajının gösterileceği element.
- * @param {string} message Gösterilecek hata mesajı.
- */
 export function renderError(container, message = "Veri yüklenirken bir hata oluştu.") {
   if (container) {
     container.innerHTML = `<p class="text-center text-red-400 p-4">${message}</p>`;
   }
 }
 
-/**
- * Konteyner boş olduğunda (veri bulunamadığında) bir mesaj gösterir.
- * @param {HTMLElement} container Mesajın gösterileceği element.
- * @param {string} message Gösterilecek mesaj.
- */
 function renderEmpty(container, message) {
   if (container) {
     container.innerHTML = `<p class="text-center text-gray-400 p-4">${message}</p>`;
@@ -134,6 +120,7 @@ export function displayFixtures(container, teamsData, fixturesData) {
     return acc;
   }, {});
 
+  // DÜZELTME: Haftaları sayısal olarak sırala (1, 2, 3 ... 10, 11)
   Object.keys(groupedByWeek).sort((a,b) => Number(a) - Number(b)).forEach(week => {
     const weekContainer = document.createElement('div');
     weekContainer.className = 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8';
