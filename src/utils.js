@@ -8,7 +8,7 @@ export function calculateStandings(teams, fixtures) {
     if (!teams || !fixtures) return [];
 
     let standings = teams.map(team => ({
-        ...team, // Takımın tüm orijinal bilgilerini koru (id, name, logo vb.)
+        ...team, 
         played: 0,
         win: 0,
         draw: 0,
@@ -52,11 +52,26 @@ export function calculateStandings(teams, fixtures) {
         team.goalDifference = team.goalsFor - team.goalsAgainst;
     });
 
-    // Sıralama mantığı
     return standings.sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
         if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
         return a.name.localeCompare(b.name);
     });
+}
+
+/**
+ * İki takım arasındaki tüm maçları bulur.
+ * @param {number} team1Id - Birinci takımın ID'si
+ * @param {number} team2Id - İkinci takımın ID'si
+ * @param {Array} fixtures - Tüm fikstür listesi
+ * @returns {Array} - İki takım arasındaki maçların listesi
+ */
+export function findHeadToHeadMatches(team1Id, team2Id, fixtures) {
+  if (!team1Id || !team2Id || !fixtures) return [];
+
+  return fixtures.filter(match => 
+    (match.homeTeamId === team1Id && match.awayTeamId === team2Id) ||
+    (match.homeTeamId === team2Id && match.awayTeamId === team1Id)
+  );
 }
