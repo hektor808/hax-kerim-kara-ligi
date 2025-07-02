@@ -44,6 +44,10 @@ describe('calculateStandings', () => {
     expect(teamB.points).toBe(3);
     expect(teamB.win).toBe(1);
     expect(teamB.loss).toBe(1);
+
+    // EKLENDİ: teamC için kontroller
+    expect(teamC.points).toBe(0);
+    expect(teamC.loss).toBe(2);
   });
 
   it('should calculate goal difference and goals for/against correctly', () => {

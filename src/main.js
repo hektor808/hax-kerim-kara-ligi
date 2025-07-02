@@ -97,6 +97,7 @@ async function updateStandings(id) {
     const { teams, fixtures } = await getCachedSeasonData(seasonId);
     displayStandings(DOM.standings.container, teams, fixtures, seasonId);
   } catch (error) {
+    console.error('Puan durumu yüklenirken hata:', error);
     renderError(DOM.standings.container, 'Puan durumu yüklenemedi.');
   }
 }
@@ -109,6 +110,7 @@ async function updateFixtures(id) {
     const { teams, fixtures } = await getCachedSeasonData(seasonId);
     displayFixtures(DOM.fixtures.container, teams, fixtures, seasonId);
   } catch (error) {
+    console.error('Fikstür yüklenirken hata:', error);
     renderError(DOM.fixtures.container, 'Fikstür yüklenemedi.');
   }
 }
@@ -129,6 +131,7 @@ async function updateDynamicSeasonSections(id) {
     displayBudgets(DOM.budgets.container, teams);
     displaySuspendedPlayers(DOM.suspensions.container, teams, playerStats);
   } catch (error) {
+    console.error('Dinamik sezon verileri yüklenirken hata:', error);
     renderError(DOM.kings.container, 'Krallıklar yüklenemedi.');
     renderError(DOM.budgets.container, 'Bütçeler yüklenemedi.');
     renderError(DOM.suspensions.container, 'Cezalı bilgisi yüklenemedi.');
@@ -143,6 +146,7 @@ async function updateEurocup(id) {
     const { teams, fixtures } = await getCachedEurocupData(cupId);
     displayEurocupFixtures(DOM.eurocup.container, teams, fixtures);
   } catch (error) {
+    console.error('Eurocup verisi yüklenirken hata:', error);
     renderError(DOM.eurocup.container, 'Eurocup verisi yüklenemedi.');
   }
 }
@@ -160,6 +164,7 @@ async function updateHeadToHead(id) {
         const matches = findMatchesByTeamNames(team1Name, team2Name, AppState.allSeasonsData);
         displayHeadToHeadResults(DOM.h2h.resultsContainer, matches, AppState.allSeasonsData, team1Name, team2Name);
     } catch (error) {
+        console.error('Maç geçmişi yüklenirken hata:', error);
         renderError(DOM.h2h.resultsContainer, 'Maç geçmişi yüklenemedi.');
     }
 }
@@ -171,6 +176,7 @@ async function updateTeams(id) {
         const { teams } = await getCachedSeasonData('3'); // Always show latest season's teams
         displayTeams(DOM.teams.container, teams);
     } catch(e) {
+        console.error('Takımlar yüklenirken hata:', e);
         renderError(DOM.teams.container, "Takımlar yüklenemedi.");
     }
 }
@@ -214,6 +220,7 @@ async function handlePlayerClick(event) {
         openPlayerModal();
         document.getElementById('modal-close-button')?.addEventListener('click', closePlayerModal, { once: true });
     } catch (error) {
+        console.error('Oyuncu modal bilgileri yüklenirken hata:', error);
         alert('Oyuncu bilgileri yüklenemedi.');
     }
 }
@@ -290,6 +297,7 @@ async function initializeApp() {
             const filteredTeams = teams.filter(team => team.name.toLowerCase().includes(searchInput));
             displayTeams(DOM.teams.container, filteredTeams);
         } catch (err) {
+            console.error('Takım arama sırasında hata:', err);
             renderError(DOM.teams.container, "Arama sırasında bir hata oluştu.");
         }
     });
