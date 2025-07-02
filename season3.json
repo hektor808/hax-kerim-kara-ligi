@@ -1,0 +1,92 @@
+{
+  "teams": [
+    {
+      "id": 1,
+      "name": "Çankırı İl Özel İdaresi",
+      "captain": "Algan",
+      "players": [
+        "Algan",
+        "Dokungaç",
+        "Dwn1s",
+        "Sabo",
+        "Asta",
+        "Firikinuks",
+        "Krakiler"
+      ],
+      "budget": 119,
+      "logo": "https://tmssl.akamaized.net//images/wappen/head/69673.png?lm=1541550694"
+    },
+    {
+      "id": 2,
+      "name": "Samsun Sportif Faaliyetler",
+      "captain": "Waldy6",
+      "players": [
+        "Waldy6",
+        "Jux",
+        "Waffle",
+        "Barış Nurullah",
+        "Egehenry",
+        "Seall"
+      ],
+      "budget": 18,
+      "logo": "https://upload.wikimedia.org/wikipedia/tr/d/d0/Samsunspor_Kul%C3%BCb%C3%BC_Logosu.png"
+    },
+    {
+      "id": 3,
+      "name": "İlave TV Pendikspor",
+      "captain": "Butto",
+      "players": [
+        "Butto",
+        "Blair",
+        "Gabo",
+        "Kızıl Çehreli",
+        "Ataalp"
+      ],
+      "budget": 360,
+      "logo": "https://upload.wikimedia.org/wikipedia/tr/c/c8/Pendikspor_logo.png"
+    },
+    {
+      "id": 4,
+      "name": "Shakhtar Donetsk",
+      "captain": "Beltran",
+      "players": [
+        "Beltran",
+        "Dodo",
+        "Efe Çetin",
+        "Greedy",
+        "Htcann"
+      ],
+      "budget": 18,
+      "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/FC_Shakhtar_Donetsk.svg/1200px-FC_Shakhtar_Donetsk.svg.png"
+    },
+    {
+      "id": 5,
+      "name": "SSC Napoli",
+      "captain": "Elkeson",
+      "players": [
+        "Elkeson",
+        "Hektör",
+        "Muleka",
+        "Tolgacion",
+        "Tolgamer",
+        "Tüpraşçı Selo"
+      ],
+      "budget": 0,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/S.S.C._Napoli_logo_2006.svg/1200px-S.S.C._Napoli_logo_2006.svg.png"
+    },
+    {
+      "id": 6,
+      "name": "Nankatsu SC",
+      "captain": "Shuzky",
+      "players": [
+        "Shuzky",
+        "escombroslxrd1928",
+        "Hadros"
+      ],
+      "budget": 70,
+      "logo": "./img/nankatsu.png"
+    }
+  ],
+  "fixtures": [],
+  "playerStats": []
+}
