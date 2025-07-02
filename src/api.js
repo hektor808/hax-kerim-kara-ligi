@@ -1,3 +1,5 @@
+// src/api.js
+
 /**
  * Belirtilen lig sezonuna ait verileri JSON dosyasından çeker.
  * @param {string} seasonId - Sezon ID'si ('1', '2', '3').
@@ -5,7 +7,8 @@
  */
 export async function getSeasonData(seasonId) {
     try {
-        // BAŞINDAKİ / KALDIRILDI, YERİNE ./ EKLENDİ
+        // Değişiklik: Kök dizin yolu ('/data...') yerine göreceli yol ('./data...') kullanıldı.
+        // Bu, projenin bir alt dizine deploy edildiğinde doğru yolu bulmasını sağlar.
         const response = await fetch(`./data/season${seasonId}.json`);
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: season${seasonId}.json`);
@@ -24,8 +27,8 @@ export async function getSeasonData(seasonId) {
  */
 export async function getEurocupData(cupId) {
     try {
-        // YOL, GÖRECELİ YOL OLARAK GÜNCELLENDİ
-        const response = await fetch(`./data/eurocup${cupId}.json`); // <--- DÜZELTİLDİ
+        // Değişiklik: Kök dizin yolu ('/data...') yerine göreceli yol ('./data...') kullanıldı.
+        const response = await fetch(`./data/eurocup${cupId}.json`);
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: eurocup${cupId}.json`);
         }

@@ -180,16 +180,59 @@ function createFixtureElement(fixture, teamsData, isEurocup = false) {
     return fixtureElement;
 }
 
-export function displayFixtures(container, teamsData, fixturesData, seasonId) {
-    if (fixturesData.length === 0) return renderEmpty(container, 'Bu sezon için fikstür verisi bulunamadı.');
+export function displayFixtures(container, teamsData, fixturesData, seasonId, filter = 'all') {
+    // Başlığı sezona göre dinamik olarak güncelliyoruz.
     document.querySelector('#fikstur h2').textContent = `Fikstür - Sezon ${seasonId}`;
-    const groupedByWeek = fixturesData.reduce((acc, f) => ({...acc, [f.week]: [...(acc[f.week] || []), f]}), {});
-    const weekContainers = Object.keys(groupedByWeek).sort((a, b) => Number(a) - Number(b)).map(week => {
-        const weekContainer = createDOMElement('div', { class: 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8' });
-        weekContainer.append(createDOMElement('h3', { class: 'text-lg sm:text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2', textContent: `${week}. Hafta Maçları` }));
-        groupedByWeek[week].map(f => createFixtureElement(f, teamsData)).forEach(el => el && weekContainer.appendChild(el));
-        return weekContainer;
-    });
+
+    // Gelen filtre parametresine göre fikstür verisini süzüyoruz.
+    let filteredFixtures = fixturesData;
+    if (filter === 'played') {
+        filteredFixtures = fixturesData.filter(f => f.status === 'Oynandı');
+    } else if (filter === 'unplayed') {
+        filteredFixtures = fixturesData.filter(f => f.status !== 'Oynandı');
+    }
+
+    // Eğer filtrelenmiş veri veya ham veri boş ise, kullanıcıya uygun bir mesaj gösterip fonksiyondan çıkıyoruz.
+    if (filteredFixtures.length === 0) {
+        const message = filter === 'all' 
+            ? 'Bu sezon için fikstür verisi bulunamadı.' 
+            : 'Bu filtreye uygun maç bulunamadı.';
+        return renderEmpty(container, message);
+    }
+
+    // Filtrelenmiş fikstürleri haftalara göre grupluyoruz.
+    const groupedByWeek = filteredFixtures.reduce((acc, f) => {
+        const week = f.week || 'Diğer'; // Olası 'week' tanımsızlığına karşı koruma
+        if (!acc[week]) {
+            acc[week] = [];
+        }
+        acc[week].push(f);
+        return acc;
+    }, {});
+
+    // Haftaları sayısal olarak sıralayarak her bir hafta için bir maç kartı oluşturuyoruz.
+    const weekContainers = Object.keys(groupedByWeek)
+        .sort((a, b) => Number(a) - Number(b))
+        .map(week => {
+            const weekContainer = createDOMElement('div', { class: 'bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-700 mb-8' });
+            weekContainer.append(
+                createDOMElement('h3', { 
+                    class: 'text-lg sm:text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2', 
+                    textContent: `${week}. Hafta Maçları` 
+                })
+            );
+            
+            // O haftanın maçlarını `createFixtureElement` ile oluşturup konteynere ekliyoruz.
+            groupedByWeek[week].forEach(fixture => {
+                const fixtureElement = createFixtureElement(fixture, teamsData);
+                if (fixtureElement) {
+                    weekContainer.appendChild(fixtureElement);
+                }
+            });
+            return weekContainer;
+        });
+
+    // Oluşturulan tüm hafta konteynerlerini ana konteynere tek seferde ekliyoruz.
     updateContainer(container, weekContainers);
 }
 
