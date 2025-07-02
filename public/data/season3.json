@@ -1,52 +1,92 @@
 {
   "teams": [
-    { "id": 1, "name": "Galatasaray", "captain": "Beltran", "players": ["Dodo","Erdem","HtcaNN"], "budget": 8, "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Galatasaray_AS_logo_2025.svg/697px-Galatasaray_AS_logo_2025.svg.png" },
-    { "id": 2, "name": "Fenerbahçe", "captain": "Waffle", "players": ["Saras","Sava"], "budget": 0, "logo": "https://upload.wikimedia.org/wikipedia/tr/8/86/Fenerbah%C3%A7e_SK.png" },
-    { "id": 3, "name": "Beşiktaş", "captain": "Firikinuks", "players": ["Arazz","Asta","Tuna"], "budget": 39, "logo":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/BesiktasJK-Logo.svg/782px-BesiktasJK-Logo.svg.png" },
-    { "id": 4, "name": "Trabzonspor", "captain": "Bahamonde", "players": ["BKL1","Vardy","GABO","Algan","Tolgacion"], "budget": 39, "logo":"https://upload.wikimedia.org/wikipedia/tr/a/ab/TrabzonsporAmblemi.png" },
-    { "id": 5, "name": "İstanbul Başakşehir", "captain": "Tolgamer", "players": ["Shuzky","Elkeson","Miella","German","Tolgamer"], "budget": 39, "logo": "https://upload.wikimedia.org/wikipedia/tr/c/cd/%C4%B0stanbul_Ba%C5%9Fak%C5%9Fehir_FK.png" },
-    { "id": 6, "name": "Bursaspor", "captain": "Yatabaré", "players": ["Blair","Butto","Ataalp","Henrizzy"], "budget": 288, "logo": "https://upload.wikimedia.org/wikipedia/tr/5/5c/Bursaspor-amblem.png" }
+    {
+      "id": 1,
+      "name": "Çankırı İl Özel İdaresi",
+      "captain": "Algan",
+      "players": [
+        "Algan",
+        "Dokungaç",
+        "Dwn1s",
+        "Sabo",
+        "Asta",
+        "Firikinuks",
+        "Krakiler"
+      ],
+      "budget": 119,
+      "logo": "img/default-logo.png"
+    },
+    {
+      "id": 2,
+      "name": "Samsun Sportif Faaliyetler",
+      "captain": "Waldy6",
+      "players": [
+        "Waldy6",
+        "Jux",
+        "Waffle",
+        "Barış Nurullah",
+        "Egehenry",
+        "Seall"
+      ],
+      "budget": 18,
+      "logo": "https://upload.wikimedia.org/wikipedia/tr/d/d0/Samsunspor_Kul%C3%BCb%C3%BC_Logosu.png"
+    },
+    {
+      "id": 3,
+      "name": "İlave TV Pendikspor",
+      "captain": "Butto",
+      "players": [
+        "Butto",
+        "Blair",
+        "Gabo",
+        "Kızıl Çehreli",
+        "Ataalp"
+      ],
+      "budget": 360,
+      "logo": "https://upload.wikimedia.org/wikipedia/tr/c/c8/Pendikspor_logo.png"
+    },
+    {
+      "id": 4,
+      "name": "Shakhtar Donetsk",
+      "captain": "Beltran",
+      "players": [
+        "Beltran",
+        "Dodo",
+        "Efe Çetin",
+        "Greedy",
+        "Htcann"
+      ],
+      "budget": 18,
+      "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/FC_Shakhtar_Donetsk.svg/1200px-FC_Shakhtar_Donetsk.svg.png"
+    },
+    {
+      "id": 5,
+      "name": "SSC Napoli",
+      "captain": "Elkeson",
+      "players": [
+        "Elkeson",
+        "Hektör",
+        "Muleka",
+        "Tolgacion",
+        "Tolgamer",
+        "Tüpraşçı Selo"
+      ],
+      "budget": 0,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/S.S.C._Napoli_logo_2006.svg/1200px-S.S.C._Napoli_logo_2006.svg.png"
+    },
+    {
+      "id": 6,
+      "name": "Nankatsu SC",
+      "captain": "Shuzky",
+      "players": [
+        "Shuzky",
+        "escombroslxrd1928",
+        "Hadros"
+      ],
+      "budget": 70,
+      "logo": "/img/nankatsu.png"
+    }
   ],
-  "fixtures": [
-    { "week": 1, "homeTeamId": 2, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "30.06.2025-01.07.2025" },
-    { "week": 1, "homeTeamId": 3, "awayTeamId": 4, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "30.06.2025-01.07.2025" },
-    { "week": 1, "homeTeamId": 6, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "30.06.2025-01.07.2025" },
-    { "week": 2, "homeTeamId": 1, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 2, "homeTeamId": 4, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 2, "homeTeamId": 2, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 3, "homeTeamId": 6, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 3, "homeTeamId": 3, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 3, "homeTeamId": 5, "awayTeamId": 4, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 4, "homeTeamId": 3, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 4, "homeTeamId": 1, "awayTeamId": 4, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 4, "homeTeamId": 2, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 5, "homeTeamId": 4, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 5, "homeTeamId": 5, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 5, "homeTeamId": 6, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 6, "homeTeamId": 5, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 6, "homeTeamId": 4, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 6, "homeTeamId": 1, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 7, "homeTeamId": 5, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 7, "homeTeamId": 6, "awayTeamId": 4, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 7, "homeTeamId": 3, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 8, "homeTeamId": 2, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 8, "homeTeamId": 1, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 8, "homeTeamId": 4, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 9, "homeTeamId": 5, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 9, "homeTeamId": 6, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 9, "homeTeamId": 4, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı" ,"date": "Belirsiz" },
-    { "week": 10, "homeTeamId": 1, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 10, "homeTeamId": 3, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" },
-    { "week": 10, "homeTeamId": 2, "awayTeamId": 4, "homeScore": null, "awayScore": null, "status": "Oynanmadı", "date": "Belirsiz" }
-  ],
-  "playerStats": [
-    { "id": 1, "name": "Beltran", "teamId": 1, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
-    { "id": 2, "name": "Firikinuks", "teamId": 3, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
-    { "id": 3, "name": "German", "teamId": 5, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0 },
-    { "id": 4, "name": "Dodo", "teamId": 1, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0 },
-    { "id": 5, "name": "Bahamonde", "teamId": 4, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0 },
-    { "id": 6, "name": "Waffle", "teamId": 2, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 1, "suspension": {"reason": "Sanal mafyalarla ilişki kurmak", "bannedWeek": 6}},
-    { "id": 7, "name": "Butto", "teamId": 6, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
-    { "id": 8, "name": "Erdem", "teamId": 1, "goals": 0, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0 }
-  ]
+  "fixtures": [],
+  "playerStats": []
 }
