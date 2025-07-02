@@ -254,19 +254,28 @@ export function displayBudgets(container, teamsData) {
     if (teamsData.length === 0) return renderEmpty(container, 'Bütçe verisi bulunamadı.');
     const budgetCards = teamsData.map(team => {
         const card = createDOMElement('div', { class: 'bg-gray-800 border border-gray-700 rounded-xl p-5 flex items-center justify-between shadow hover:shadow-lg transition' });
+        
         const teamInfoDiv = createDOMElement('div', { class: 'flex items-center gap-4' });
-        teamInfoDiv.append(
-            createDOMElement('img', { src: team.logo || DEFAULT_LOGO_PATH, alt: `${team.name} logo`, class: 'w-12 h-12 rounded object-contain' }),
-            createDOMElement('div', {}, [
-                createDOMElement('h3', { class: 'text-white font-bold text-lg', textContent: team.name }),
-                createDOMElement('p', { class: 'text-sm text-gray-400', textContent: `Kaptan: ${team.captain}` })
-            ])
+        const textContainer = createDOMElement('div'); // Yazılar için bir konteyner oluşturuluyor
+
+        // Takım ve kaptan adını oluşturan elementler bu yeni konteynere ekleniyor
+        textContainer.append(
+            createDOMElement('h3', { class: 'text-white font-bold text-lg', textContent: team.name }),
+            createDOMElement('p', { class: 'text-sm text-gray-400', textContent: `Kaptan: ${team.captain}` })
         );
+
+        // Logo ve yazı konteyneri ana bilgi div'ine ekleniyor
+        teamInfoDiv.append(
+            createDOMElement('img', { src: team.logo || 'img/default-logo.png', alt: `${team.name} logo`, class: 'w-12 h-12 rounded object-contain' }),
+            textContainer
+        );
+
         const budgetDiv = createDOMElement('div', { class: 'text-right' });
         budgetDiv.append(
             createDOMElement('p', { class: 'text-sm text-gray-400', textContent: 'Bütçe' }),
             createDOMElement('p', { class: 'text-2xl font-bold text-green-400', textContent: `${team.budget}M€` })
         );
+        
         card.append(teamInfoDiv, budgetDiv);
         return card;
     });
