@@ -168,30 +168,12 @@ function createFixtureElement(fixture, teamsData, isEurocup = false) {
     const scoreDiv = createDOMElement('div', { class: 'w-1/5 sm:w-1/5 text-center flex items-center justify-center min-w-max' });
     
     if (fixture.status === 'Oynandı' && fixture.homeScore !== null) {
-        const scoreContainer = createDOMElement('div', { class: 'flex items-center justify-center gap-2' });
-
-        // Skorları ekle
-        scoreContainer.append(
+              scoreDiv.append(
             createDOMElement('span', { class: 'font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white', textContent: fixture.homeScore }),
-            createDOMElement('span', { class: 'font-bold text-gray-400 mx-1', textContent: '-' }),
+            createDOMElement('span', { class: 'font-bold text-gray-400 mx-1 sm:mx-3', textContent: '-' }),
             createDOMElement('span', { class: 'font-bold text-lg sm:text-xl px-2 py-1.5 rounded-md bg-blue-600 text-white', textContent: fixture.awayScore })
         );
         
-        // YENİ EKLENEN KISIM: Maç tekrarı butonu
-        if (fixture.replayUrl) {
-            const replayLink = createDOMElement('a', {
-                href: fixture.replayUrl,
-                title: 'Maç Tekrarını İndir',
-                class: 'text-blue-400 hover:text-blue-300 transition-colors ml-3 text-xl',
-                target: '_blank', // Yeni sekmede açmak için
-                download: '' // Dosyanın indirilmesini sağlamak için
-            });
-            replayLink.innerHTML = '<i class="fas fa-play-circle"></i>'; // Font Awesome ikonu
-            scoreContainer.appendChild(replayLink);
-        }
-
-        scoreDiv.append(scoreContainer);
-
     } else {
         scoreDiv.append(createDOMElement('span', { class: 'text-xs sm:text-sm text-gray-400', textContent: fixture.date || 'Belirsiz' }));
     }
