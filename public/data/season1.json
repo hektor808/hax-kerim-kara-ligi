@@ -7,7 +7,7 @@
     { "id": 5, "name": "Samsun SF", "captain": "Elkeson", "players": [], "budget": 0, "logo": "https://upload.wikimedia.org/wikipedia/tr/d/d0/Samsunspor_Kul%C3%BCb%C3%BC_Logosu.png" }
   ],
   "fixtures": [
-    { "week": 1, "homeTeamId": 3, "awayTeamId": 4, "homeScore": 11, "awayScore": 3, "status": "Oynandı", "replayUrl": "replays/eplays/season1/week1/sokan_vs_seckinler.hbr2"},
+    { "week": 1, "homeTeamId": 3, "awayTeamId": 4, "homeScore": 11, "awayScore": 3, "status": "Oynandı", "replayUrl": "replays/season1/week1/sokan_vs_seckinler.hbr2"},
     { "week": 1, "homeTeamId": 1, "awayTeamId": 2, "homeScore": 3, "awayScore": 2, "status": "Oynandı"},
     { "week": 2, "homeTeamId": 5, "awayTeamId": 2, "homeScore": 6, "awayScore": 17, "status": "Oynandı"},
     { "week": 2, "homeTeamId": 4, "awayTeamId": 1, "homeScore": 0, "awayScore": 16, "status": "Oynandı"},
