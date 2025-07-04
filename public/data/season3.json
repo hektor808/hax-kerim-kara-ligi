@@ -3,7 +3,7 @@
     {
       "id": 1,
       "name": "Çankırı İl Özel İdaresi",
-      "captain": "Algan",
+      "captain": "Krakiler",
       "players": [
         "Algan",
         "Dokungaç",
@@ -11,17 +11,18 @@
         "Sabo",
         "Asta",
         "Firikinuks",
-        "Krakiler"
+        "Krakiler",
+        "Tuna"
       ],
       "budget": 119,
-      "logo": "https://sortitoutsidospaces.b-cdn.net/megapacks/fmgsourcelogos/packs/2022.00/FMG%20Source%20Logos/Club%20Logos/Clubs/70054570.png"
+      "logo": "https://sortitoutsidospaces.b-cdn.net/megapacks/fmgsourcelogos/packs/2022.00/FMG%20Source%20Logos/Club%20Logos/70054570.png"
     },
     {
       "id": 2,
       "name": "Samsun Sportif Faaliyetler",
-      "captain": "Waldy6",
+      "captain": "Waldy",
       "players": [
-        "Waldy6",
+        "Waldy",
         "Jux",
         "Waffle",
         "Barış Nurullah",
@@ -53,7 +54,7 @@
         "Beltran",
         "Dodo",
         "Efe Çetin",
-        "Greedy",
+        "Erdem",
         "Htcann"
       ],
       "budget": 18,
@@ -69,9 +70,9 @@
         "Muleka",
         "Tolgacion",
         "Tolgamer",
-        "Tüpraşçı Selo"
+        "Tüpraşçı Sebo"
       ],
-      "budget": 0,
+      "budget": -20,
       "logo": "https://i.imgur.com/m9HPf1d.png"
     },
     {
@@ -80,17 +81,19 @@
       "captain": "Shuzky",
       "players": [
         "Shuzky",
-        "escombroslxrd1928",
-        "Hadros"
+        "Escombros",
+        "Hadros",
+        "Okowa",
+        "Sweix"
       ],
       "budget": 70,
       "logo": "https://i.imgur.com/6qHClwI.png"
     }
   ],
   "fixtures": [
-    { "week": 1, "homeTeamId": 4, "awayTeamId": 2, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
-    { "week": 1, "homeTeamId": 1, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
-    { "week": 1, "homeTeamId": 6, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
+    { "week": 1, "homeTeamId": 4, "awayTeamId": 2, "homeScore": 5, "awayScore": 5, "status": "Oynandı" },
+    { "week": 1, "homeTeamId": 1, "awayTeamId": 5, "homeScore": 31, "awayScore": 1, "status": "Oynandı" },
+    { "week": 1, "homeTeamId": 6, "awayTeamId": 3, "homeScore": 10, "awayScore": 5, "status": "Oynandı" },
     { "week": 2, "homeTeamId": 2, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
     { "week": 2, "homeTeamId": 5, "awayTeamId": 6, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
     { "week": 2, "homeTeamId": 4, "awayTeamId": 1, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
@@ -119,5 +122,25 @@
     { "week": 10, "homeTeamId": 1, "awayTeamId": 3, "homeScore": null, "awayScore": null, "status": "Oynanmadı" },
     { "week": 10, "homeTeamId": 4, "awayTeamId": 5, "homeScore": null, "awayScore": null, "status": "Oynanmadı" }
   ],
-  "playerStats": []
+  "playerStats": [
+    {"id": 1, "name": "Dokungaç", "teamId": 1, "goals": 12, "assists": 2, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 2, "name": "Tuna", "teamId": 1, "goals": 7, "assists": 6, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 3, "name": "Hadros", "teamId": 6, "goals": 4, "assists": 2, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 4, "name": "Beltran", "teamId": 4, "goals": 3, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 5, "name": "Firikinuks", "teamId": 1, "goals": 3, "assists": 4, "cleanSheets": 1, "yellowCards": 0, "redCards": 0},
+    {"id": 6, "name": "MalatyanınSahibi", "teamId": null, "goals": 3, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 7, "name": "Barış", "teamId": 2, "goals": 3, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 8, "name": "GABO", "teamId": 3, "goals": 2, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 9, "name": "Shuzky", "teamId": 6, "goals": 2, "assists": 2, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 10, "name": "Ataalp", "teamId": 3, "goals": 2, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 11, "name": "Sabo", "teamId": 1, "goals": 2, "assists": 2, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 12, "name": "Asta", "teamId": 1, "goals": 2, "assists": 4, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 13, "name": "Dodo", "teamId": 4, "goals": 1, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 14, "name": "Blair", "teamId": 3, "goals": 1, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 15, "name": "Muleka", "teamId": 5, "goals": 1, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 16, "name": "Erdem", "teamId": 4, "goals": 1, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 17, "name": "Jux", "teamId": 2, "goals": 1, "assists": 1, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 18, "name": "Waffle", "teamId": 2, "goals": 1, "assists": 0, "cleanSheets": 0, "yellowCards": 0, "redCards": 0},
+    {"id": 19, "name": "Htcann", "teamId": 4, "goals": 0, "assists": 3, "cleanSheets": 0, "yellowCards": 0, "redCards": 0}
+  ]
 }
