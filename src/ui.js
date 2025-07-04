@@ -147,7 +147,8 @@ export function displayStandings(container, teams, fixtures, seasonId) {
           createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.played }),
           createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-green-400', textContent: team.win }),
           createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-yellow-400', textContent: team.draw }),
-          createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-red-500', textContent: team.loss }),
+          // DÜZELTME: text-red-500 yerine text-red-400 kullanıldı
+          createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-red-400', textContent: team.loss }),
           createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.goalsFor }),
           createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.goalsAgainst }),
           createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: `${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}` }),
