@@ -134,14 +134,22 @@ export function displayStandings(container, teams, fixtures, seasonId) {
     document.querySelector('#puan h2').textContent = `Puan Durumu - Sezon ${seasonId}`;
     const rows = standings.map((team, index) => {
         const row = createDOMElement('tr', { class: 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50' });
+        
         const teamCell = createDOMElement('td', { class: 'px-6 py-4 flex items-center gap-3' });
         teamCell.append(
             createDOMElement('img', { src: team.logo || DEFAULT_LOGO_PATH, alt: `${team.name} logo`, class: 'w-10 h-10 rounded object-contain' }),
             createDOMElement('span', { class: 'font-semibold text-white', textContent: team.name })
         );
+
         row.append(
           createDOMElement('td', { class: `px-6 py-4 font-medium whitespace-nowrap ${index < 3 ? 'text-green-400' : ''}`, textContent: index + 1 }),
-          teamCell, ...['played', 'win', 'draw', 'loss', 'goalsFor', 'goalsAgainst'].map(key => createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team[key] })),
+          teamCell,
+          createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.played }),
+          createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-green-400', textContent: team.win }),
+          createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-yellow-400', textContent: team.draw }),
+          createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-red-500', textContent: team.loss }),
+          createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.goalsFor }),
+          createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: team.goalsAgainst }),
           createDOMElement('td', { class: 'px-6 py-4 text-center', textContent: `${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}` }),
           createDOMElement('td', { class: 'px-6 py-4 text-center font-bold text-white', textContent: team.points })
         );
