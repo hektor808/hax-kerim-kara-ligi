@@ -1,89 +1,176 @@
-// Dosya Yolu: backend/src/app.js
+/**
+* File: backend/src/app.js
+* Improved Express app with security, observability, versioned API, and robust error/shutdown handling.
+*/
 
-// 1. GEREKLİ MODÜLLERİN YÜKLENMESİ
-// ----------------------------------------------------
-const express = require('express');
+// 1) Load environment early
 const dotenv = require('dotenv');
-const cors = require('cors');
-
-// Rota tanımlamalarımızı import ediyoruz.
-const userRoutes = require('./routes/userRoutes');
-
-// Oluşturduğumuz merkezi hata yönetimi middleware'ini import ediyoruz.
-const errorHandler = require('./middleware/errorHandler');
-
-
-// 2. UYGULAMA KURULUMU
-// ----------------------------------------------------
-// .env dosyasındaki ortam değişkenlerini yükle (process.env üzerinden erişmek için)
-// Bu satır, diğer kodlardan önce çalışmalıdır.
 dotenv.config();
 
-// Express uygulamasını başlat
+// 2) Imports
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');            // Security headers
+const compression = require('compression');  // Response compression
+
+// Routes
+const userRoutes = require('./routes/userRoutes');
+
+// Centralized error handler (must be (err, req, res, next))
+const errorHandler = require('./middleware/errorHandler');
+
+// 3) Constants & configuration
+const ENV = process.env.NODE_ENV || 'development';
+const isProd = ENV === 'production';
+
+// Resolve PORT safely (fallback 3001)
+const PORT = Number.isInteger(Number(process.env.PORT)) ? Number(process.env.PORT) : 3001;
+
+// Versioned API prefix
+const API_PREFIX = process.env.API_PREFIX || '/api';
+const API_V1 = `${API_PREFIX}/v1`;
+
+// CORS configuration
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || '')
+ .split(',')
+ .map(o => o.trim())
+ .filter(Boolean);
+
+const corsOptions = {
+ origin: ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : true, // true reflects request origin
+ methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+ credentials: true,
+ optionsSuccessStatus: 204
+};
+
+// 4) App initialization
 const app = express();
 
-// Port'u ortam değişkenlerinden al, eğer tanımlı değilse 3001 kullan
-const PORT = process.env.PORT || 3001;
+// 5) Global middlewares (order matters)
+// Security headers
+app.use(helmet());
 
+// Compression for text responses
+app.use(compression());
 
-// 3. TEMEL ARA KATMANLAR (MIDDLEWARES)
-// ----------------------------------------------------
-// Cross-Origin Resource Sharing (CORS) middleware'ini etkinleştir.
-// Bu, frontend (React) uygulamasının backend'e istek atabilmesi için gereklidir.
-app.use(cors());
+// CORS
+app.use(cors(corsOptions));
 
-// Gelen JSON formatındaki istek gövdelerini (request bodies) parse etmek için.
-app.use(express.json());
+// Body parsers with sane limits to mitigate large payload attacks
+app.use(express.json({ limit: process.env.JSON_LIMIT || '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.URLENC_LIMIT || '1mb' }));
 
-// URL-encoded formatındaki verileri parse etmek için (form gönderileri vb.).
-app.use(express.urlencoded({ extended: true }));
-
-
-// 4. BASİT İSTEK LOG'LAMA MIDDLEWARE'İ
-// ----------------------------------------------------
-// Gelen her isteğin metodunu ve yolunu konsola yazdıran basit bir loglayıcı.
-// Debug sürecinde çok yardımcı olur.
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-    next();
+// Request ID correlation
+app.use(function requestId(req, res, next) {
+ const headerId = req.get('x-request-id');
+ req.id = headerId || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+ res.setHeader('x-request-id', req.id);
+ next();
 });
 
+// Request logging (log after response to include status/time)
+app.use(function requestLogger(req, res, next) {
+ const start = Date.now();
+ const { method, originalUrl } = req;
 
-// 5. API ROTALARININ TANIMLANMASI
-// ----------------------------------------------------
-// /api/users ile başlayan tüm istekleri userRoutes dosyasının yönetmesini sağla.
-app.use('/api/users', userRoutes);
+ res.on('finish', () => {
+   const ms = Date.now() - start;
+   const line = isProd
+     ? `[${req.id}] ${method} ${originalUrl} -> ${res.statusCode} ${ms}ms`
+     : `[${new Date().toISOString()}] [${ENV}] [${req.id}] ${method} ${originalUrl} -> ${res.statusCode} ${ms}ms`;
+   console.log(line);
+ });
 
+ next();
+});
 
-// 6. 404 (NOT FOUND) HATALARI İÇİN YAKALAYICI
-// ----------------------------------------------------
-// Yukarıdaki rotalardan hiçbiriyle eşleşmeyen tüm istekler için bu middleware çalışır.
-// Bir 404 hatası oluşturup merkezi hata yöneticisine gönderir.
+// 6) Health and base info routes (useful for ops/load balancers)
+app.get('/health', (req, res) => {
+ res.status(200).json({
+   status: 'ok',
+   env: ENV,
+   uptime: process.uptime(),
+   timestamp: Date.now()
+ });
+});
+
+app.get('/', (req, res) => {
+ res.status(200).json({ message: 'Service is running', version: 'v1', base: API_V1 });
+});
+
+// 7) API routes
+// Was: '/api/users' -> now versioned: '/api/v1/users'
+app.use(`${API_V1}/users`, userRoutes);
+
+// 8) 404 (Not Found) catcher
 app.all('*', (req, res, next) => {
-    const err = new Error(`'${req.originalUrl}' yolu sunucuda bulunamadı.`);
-    err.statusCode = 404;
-    next(err);
+ const err = new Error(`Path not found: ${req.method} ${req.originalUrl}`);
+ err.statusCode = 404;
+ next(err);
 });
 
+// 9) Centralized error handler (kept last)
+// We wrap your custom handler to ensure a fallback shape if it throws
+app.use(function wrappedErrorHandler(err, req, res, next) {
+ const status = Number.isInteger(err.statusCode) ? err.statusCode : 500;
+ const fallbackPayload = {
+   requestId: req.id,
+   message: err.message || 'Internal Server Error',
+   ...(isProd ? {} : { stack: err.stack })
+ };
 
-// 7. MERKEZİ HATA YÖNETİCİSİ (GLOBAL ERROR HANDLER)
-// ----------------------------------------------------
-// ÖNEMLİ: Bu middleware, mutlaka ve mutlaka tüm diğer 'app.use()' ve
-// rota tanımlamalarından SONRA gelmelidir. Express bu şekilde çalışır.
-// Controller'lardan 'next(error)' ile gönderilen tüm hatalar buraya düşer.
-app.use(errorHandler);
-
-
-// 8. SUNUCUNUN BAŞLATILMASI
-// ----------------------------------------------------
-app.listen(PORT, () => {
-    console.log(`Sunucu ${PORT} portunda başarıyla başlatıldı.`);
-    console.log(`Ortam (Environment): ${process.env.NODE_ENV || 'development'}`);
+ try {
+   return errorHandler(err, req, res, next);
+ } catch (handlerErr) {
+   console.error('Error in custom errorHandler:', handlerErr);
+   return res.status(status).json(fallbackPayload);
+ }
 });
 
+// 10) Start server with robust error/shutdown handling
+const server = app.listen(PORT, () => {
+ console.log(`Server listening on port ${PORT}`);
+ console.log(`Environment: ${ENV}`);
+ if (ALLOWED_ORIGINS.length) {
+   console.log(`CORS restricted to: ${ALLOWED_ORIGINS.join(', ')}`);
+ } else {
+   console.log('CORS origin reflective (allows any origin)');
+ }
+});
 
-// 9. DIŞA AKTARMA (TESTLER İÇİN)
-// ----------------------------------------------------
-// Supertest gibi test kütüphanelerinin uygulamayı import edip
-// testleri çalıştırması için bu satır gereklidir.
+// Handle server-level errors explicitly
+server.on('error', (err) => {
+ if (err && err.code === 'EADDRINUSE') {
+   console.error(`Port ${PORT} is already in use.`);
+ } else if (err && err.code === 'EACCES') {
+   console.error(`Insufficient privileges to bind to port ${PORT}.`);
+ } else {
+   console.error('Server error:', err);
+ }
+ process.exit(1);
+});
+
+// Graceful shutdown
+function shutdown(signal) {
+ console.log(`${signal} received: closing server...`);
+ server.close((closeErr) => {
+   if (closeErr) {
+     console.error('Error during server close:', closeErr);
+     process.exit(1);
+   }
+   console.log('Server closed gracefully.');
+   process.exit(0);
+ });
+
+ // Force exit after timeout
+ setTimeout(() => {
+   console.warn('Forced shutdown after timeout.');
+   process.exit(1);
+ }, Number(process.env.SHUTDOWN_TIMEOUT_MS || 10000));
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+// 11) Export for tests
 module.exports = app;

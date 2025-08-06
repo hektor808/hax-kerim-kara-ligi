@@ -7,9 +7,10 @@
  */
 export async function getSeasonData(seasonId) {
     try {
-        // Değişiklik: Kök dizin yolu ('/data...') yerine göreceli yol ('./data...') kullanıldı.
-        // Bu, projenin bir alt dizine deploy edildiğinde doğru yolu bulmasını sağlar.
-        const response = await fetch(`./data/season${seasonId}.json`);
+        // DÜZELTME: Statik göreceli yol yerine, Vite'ın base URL'ini de içeren dinamik bir yol oluşturuldu.
+        // import.meta.env.BASE_URL, vite.config.js'deki 'base' değerini alır ('/hax-kerim-kara-ligi/').
+        // Bu sayede istek, hem yerel geliştirme ortamında hem de canlı sunucuda doğru URL'e yapılır.
+        const response = await fetch(`${import.meta.env.BASE_URL}data/season${seasonId}.json`);
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: season${seasonId}.json`);
         }
@@ -27,8 +28,9 @@ export async function getSeasonData(seasonId) {
  */
 export async function getEurocupData(cupId) {
     try {
-        // Değişiklik: Kök dizin yolu ('/data...') yerine göreceli yol ('./data...') kullanıldı.
-        const response = await fetch(`./data/eurocup${cupId}.json`);
+        // DÜZELTME: Aynı mantık Eurocup verileri için de uygulandı.
+        // Bu, projenin farklı ortamlarda (localhost, GitHub Pages vb.) sorunsuz çalışmasını garanti eder.
+        const response = await fetch(`${import.meta.env.BASE_URL}data/eurocup${cupId}.json`);
         if (!response.ok) {
             throw new Error(`Veri dosyası bulunamadı: eurocup${cupId}.json`);
         }
