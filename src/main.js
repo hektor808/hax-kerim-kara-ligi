@@ -139,6 +139,7 @@ const DOM = {
     mobileNavLinks: document.querySelectorAll('.nav-link-mobile'),
     mobileMenu: byId('mobile-menu'),
     mobileMenuButton: byId('mobile-menu-button'),
+    themeToggleButton: byId('theme-toggle-button'),
   },
 };
 
@@ -397,6 +398,8 @@ function showSection(id) {
   // Close mobile menu if open
   if (DOM.navigation.mobileMenu && !DOM.navigation.mobileMenu.classList.contains('hidden')) {
     DOM.navigation.mobileMenu.classList.add('hidden');
+    DOM.navigation.mobileMenuButton?.setAttribute('aria-expanded', 'false');
+    DOM.navigation.mobileMenuButton?.setAttribute('aria-label', 'Menüyü aç');
   }
 
   const updater = sectionUpdaters[id];
@@ -461,12 +464,28 @@ function addEventListeners() {
   // Navigation
   DOM.navigation.navLinks.forEach((link) => link.addEventListener('click', handleLinkClick));
   DOM.navigation.mobileNavLinks.forEach((link) => link.addEventListener('click', handleLinkClick));
-  DOM.navigation.mobileMenuButton?.addEventListener('click', () =>
-    DOM.navigation.mobileMenu?.classList.toggle('hidden'),
-  );
+  DOM.navigation.mobileMenuButton?.addEventListener('click', () => {
+    if (!DOM.navigation.mobileMenu) return;
+    DOM.navigation.mobileMenu.classList.toggle('hidden');
+    const expanded = !DOM.navigation.mobileMenu.classList.contains('hidden');
+    DOM.navigation.mobileMenuButton.setAttribute('aria-expanded', String(expanded));
+    DOM.navigation.mobileMenuButton.setAttribute('aria-label', expanded ? 'Menüyü kapat' : 'Menüyü aç');
+  });
+
+  DOM.navigation.themeToggleButton?.addEventListener('click', () => {
+    document.body.classList.toggle('theme-contrast');
+    const highContrast = document.body.classList.contains('theme-contrast');
+    DOM.navigation.themeToggleButton.setAttribute(
+      'aria-label',
+      highContrast ? 'Standart temaya dön' : 'Tema değiştir',
+    );
+  });
 
   // History
   window.addEventListener('popstate', handlePageLoadOrPopState);
+  window.addEventListener('scroll', () => {
+    document.body.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
 
   // Season selects
   [DOM.standings.select, DOM.fixtures.select, DOM.kings.select]
